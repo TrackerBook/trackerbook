@@ -104,13 +104,14 @@ namespace bcollection
                 var itemCreator = new ItemCreator(checksumCreator);
                 var item = itemCreator.Create(fileInfo.FullName, File.ReadAllBytes(fileInfo.FullName));
                 var result = bCollection.AddItem(item);
-                if (result is Added)
+                switch (result)
                 {
-                    Console.WriteLine($"Added: {fileInfo?.checksum ?? "null"}");
-                }
-                else if (result is AlreadyExists)
-                {
-                    Console.WriteLine($"Already exists: {fileInfo?.checksum ?? "null"}");
+                    case Added addedResult:
+                        Console.WriteLine($"Added: {addedResult.checksum ?? "null"}");
+                        break;
+                    case AlreadyExists alreadyExistsResult:
+                        Console.WriteLine($"Already exists: {alreadyExistsResult.checksum ?? "null"}");
+                        break;
                 }
             });
             return addCommand;

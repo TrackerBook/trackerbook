@@ -144,7 +144,7 @@ namespace bcollection.app
             extendedMeta[extendedMeta.Length - 1] = tag;
 
             return storage.Post(item with { metadata = extendedMeta })
-                ? Updated
+                ? new Updated(item.checksum.value)
                 : new Error("Can't add metadata.");
         }
 
@@ -162,7 +162,9 @@ namespace bcollection.app
                     return new Error("Can't delete file.");
                 }
             }
-            return this.storage.Delete(item) ? Deleted : new Error("Can't delete item.");
+            return this.storage.Delete(item)
+                ? new Deleted(item.checksum.value)
+                : new Error("Can't delete item.");
         }
 
         public Result DeleteMetadata(Item item, MetaData meta)
@@ -182,7 +184,7 @@ namespace bcollection.app
                 }
             }
             return storage.Post(item with { metadata = reducedMeta })
-                ? Updated
+                ? new Updated(item.checksum.value)
                 : new Error("Can't delete metadata.");
         }
 
