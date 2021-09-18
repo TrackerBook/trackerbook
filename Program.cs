@@ -20,7 +20,8 @@ namespace bcollection
                 CreateAddCommand(),
                 CreateListCommand(),
                 CreateDeleteCommand(),
-                CreateFindByChecksumCommand()
+                CreateFindByChecksumCommand(),
+                CreateDeleteAllCommand()
             }.InvokeAsync(args).Result;
         }
 
@@ -77,6 +78,31 @@ namespace bcollection
             return deleteCommand;
         }
 
+        private static Command CreateDeleteAllCommand()
+        {
+            var deleteCommand = new Command(
+                                "delete-all",
+                                "Delete all items");
+            deleteCommand.Handler = CommandHandler.Create<string>((checksum) =>
+            {
+                var bCollection = CreateBCollection();
+                foreach (var item in bCollection.GetItems())
+                {
+                    var result = bCollection.DeleteItem(item.checksum.value);
+                    if (result is Deleted)
+                    {
+                        Console.WriteLine("Deleted item.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Can't delete item.");
+                        Console.WriteLine(result);
+                    }
+                }
+            });
+            return deleteCommand;
+        }
+
         private static Command CreateListCommand()
         {
             var listCommand = new Command(
@@ -97,12 +123,13 @@ namespace bcollection
         {
             var addCommand = new Command("add", "Add a file to the collection.");
             addCommand.AddArgument(new Argument<FileInfo>("fileInfo"));
-            addCommand.Handler = CommandHandler.Create<FileInfo>((fileInfo) =>
+            addCommand.Handler = CommandHandler.Create<FileInfo>(async (fileInfo) =>
             {
                 var bCollection = CreateBCollection();
                 var checksumCreator = new ChecksumCreator();
-                var itemCreator = new ItemCreator(checksumCreator);
-                var item = itemCreator.Create(fileInfo.FullName, File.ReadAllBytes(fileInfo.FullName));
+                var metaExtractorFabric = new MetaExtractorFabric();
+                var itemCreator = new ItemCreator(checksumCreator, metaExtractorFabric);
+                var item = await itemCreator.Create(fileInfo.FullName, File.ReadAllBytes(fileInfo.FullName));
                 var result = bCollection.AddItem(item);
                 switch (result)
                 {

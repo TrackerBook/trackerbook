@@ -63,12 +63,12 @@ namespace bcollection.infr
     }
     public interface IItemCreator
     {
-        Item Create(string path, byte[] data);
+        Task<Item> Create(string path, byte[] data);
     }
 
     public interface IMetaExtractorFabric
     {
-        IMetaExtractor Create(string extension);
+        IMetaExtractor[] Create(string extension);
     }
 
     public interface IMetaExtractor
@@ -197,6 +197,7 @@ namespace bcollection.app
 namespace bcollection.infr
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -337,32 +338,44 @@ namespace bcollection.infr
         private const string PathKey = "path";
         private const string CreatedDateKey = "createdDate";
         private const string ExtensionKey = "ext";
+        private readonly IMetaExtractorFabric metaExtractorFabric;
         private readonly IChecksumCreator checksumCreator;
-        public ItemCreator(IChecksumCreator checksumCreator) => this.checksumCreator = checksumCreator;
+        public ItemCreator(IChecksumCreator checksumCreator, IMetaExtractorFabric metaExtractorFabric)
+        {
+            this.metaExtractorFabric = metaExtractorFabric;
+            this.checksumCreator = checksumCreator;
+        }
 
-        public Item Create(string path, byte[] data)
+        public async Task<Item> Create(string path, byte[] data)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             var checksum = this.checksumCreator.Create(data);
             var extension = Path.GetExtension(path);
+            
             var tags = Array.Empty<MetaData>();
-            var metadata = new[]
+            var metadata = new List<MetaData>
             {
                 new MetaData(ExtensionKey, new MetaString(extension)),
                 new MetaData(NameKey, new MetaString(name)),
                 new MetaData(PathKey, new MetaString(path)),
                 new MetaData(CreatedDateKey, new MetaDateTime(DateTimeOffset.UtcNow.UtcDateTime)),
             };
-            return new Item(checksum, metadata);
+
+            var metaExtractors = metaExtractorFabric.Create(extension);
+            foreach (var extractor in metaExtractors)
+            {
+                metadata.AddRange(await extractor.Extract(data));
+            }
+            return new Item(checksum, metadata.ToArray());
         }
     }
 
     internal class MetaExtractorFabric : IMetaExtractorFabric
     {
-        public IMetaExtractor Create(string extension) => extension switch
+        public IMetaExtractor[] Create(string extension) => extension switch
         {
-            ".fb2" => new Fb2MetaExtractor(),
-            _ => new NoMetaExtractor()
+            ".fb2" => new IMetaExtractor[] { new Fb2MetaExtractor() },
+            _ => Array.Empty<IMetaExtractor>()
         };
     }
 
@@ -375,10 +388,48 @@ namespace bcollection.infr
     {
         public async Task<MetaData[]> Extract(byte[] data)
         {
-            // using var stream = new MemoryStream(data);
-            // var fb2file = await ReadFB2FileStreamAsync(stream);
-            // fb2file.DocumentInfo.
-            throw new NotImplementedException();
+            using var stream = new MemoryStream(data);
+            var fb2file = await ReadFB2FileStreamAsync(stream);
+            var image = fb2file.TitleInfo?.Cover?.CoverpageImages.FirstOrDefault()?.HRef;
+            var titleInfo = fb2file.TitleInfo;
+            if (titleInfo != null)
+            {
+                var result = new List<MetaData>();
+                if (fb2file.Images.FirstOrDefault().Key == image?.Substring(1))
+                {
+                    var imageData = fb2file.Images.FirstOrDefault().Value.BinaryData;
+                    result.Add(new MetaData(
+                        "cover",
+                        new MetaFile(
+                            new ItemFileRef(titleInfo.BookTitle.Text),
+                            imageData)));
+                }
+                var authors = titleInfo.BookAuthors.Select(x => x.ToString()).Aggregate((x, y) => x + ";" + y);
+                if (authors is not null)
+                {
+                    result.Add(new MetaData(
+                        "authors",
+                        new MetaString(authors)));
+                }
+                result.Add(new MetaData(
+                    "authors",
+                    new MetaDateTime(titleInfo.BookDate.DateValue)));
+                result.Add(new MetaData(
+                    "title",
+                    new MetaString(titleInfo.BookTitle.Text)));
+                result.Add(new MetaData(
+                    "genres",
+                    new MetaString(titleInfo.Genres.Select(x => x.Genre).Aggregate((x, y) => x + ";" + y))));
+                result.Add(new MetaData(
+                    "keywords",
+                    new MetaString(titleInfo.Keywords.Text)));
+                result.Add(new MetaData(
+                    "language",
+                    new MetaString(titleInfo.Language)));
+                return result.ToArray();
+            }
+            
+            return Array.Empty<MetaData>();
         }
 
         private async Task<FB2File> ReadFB2FileStreamAsync(Stream stream)
