@@ -88,6 +88,7 @@ namespace bcollection.app
     using System.Security.Cryptography;
     using bcollection.domain;
     using bcollection.infr;
+    using Microsoft.Extensions.Logging;
 
     public class ChecksumCreator : IChecksumCreator
     {
@@ -102,34 +103,39 @@ namespace bcollection.app
 
     public class BCollection : IBCollection
     {
+        private readonly ILogger<BCollection> logger;
         private readonly IStorage storage;
         private readonly IFileStorage fileStorage;
 
-        public BCollection(IStorage storage, IFileStorage fileStorage)
+        public BCollection(ILoggerFactory loggerFactory, IStorage storage, IFileStorage fileStorage)
         {
+            this.logger = loggerFactory.CreateLogger<BCollection>();
             this.storage = storage;
             this.fileStorage = fileStorage;
         }
 
         public Result AddItem(Item item)
         {
-            var existingItem = this.storage.Get(item.checksum.value);
-            if (existingItem is not null)
+            using (this.logger.BeginScope(nameof(AddItem)))
             {
-                return new AlreadyExists(existingItem.checksum.value);
-            }
-            if (!this.storage.Put(item))
-            {
-                return new Error("Can't add item.");
-            }
-            foreach (var fileMeta in item.metadata.OfType<MetaFile>())
-            {
-                if (!this.fileStorage.Post(fileMeta))
+                var existingItem = this.storage.Get(item.checksum.value);
+                if (existingItem is not null)
                 {
-                    return new Error("Can't upload file.");
+                    return new AlreadyExists(existingItem.checksum.value);
                 }
+                if (!this.storage.Put(item))
+                {
+                    return new Error("Can't add item.");
+                }
+                foreach (var fileMeta in item.metadata.OfType<MetaFile>())
+                {
+                    if (!this.fileStorage.Post(fileMeta))
+                    {
+                        return new Error("Can't upload file.");
+                    }
+                }
+                return new Added(item.checksum.value);
             }
-            return new Added(item.checksum.value);
         }
 
         public Result AddMetadata(Item item, MetaData tag)
