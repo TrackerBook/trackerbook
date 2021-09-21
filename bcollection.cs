@@ -1,6 +1,7 @@
 using System;
 
 #region Architecture
+//
 
 namespace bcollection.domain
 {
