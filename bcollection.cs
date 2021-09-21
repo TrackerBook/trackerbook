@@ -212,6 +212,9 @@ namespace bcollection.infr
     using bcollection.domain;
     using FB2Library;
     using LiteDB;
+    using UglyToad.PdfPig;
+    using UglyToad.PdfPig.Content;
+
     internal class Storage : IStorage
     {
         static Storage()
@@ -381,6 +384,7 @@ namespace bcollection.infr
         public IMetaExtractor[] Create(string extension) => extension switch
         {
             ".fb2" => new IMetaExtractor[] { new Fb2MetaExtractor() },
+            ".pdf" => new IMetaExtractor[] { new PdfMetaExtractor() },
             _ => Array.Empty<IMetaExtractor>()
         };
     }
@@ -407,9 +411,11 @@ namespace bcollection.infr
                     result.Add(new MetaData(
                         "cover",
                         new MetaFile(
+                            // todo - random id ref
                             new ItemFileRef(titleInfo.BookTitle.Text),
                             imageData)));
                 }
+                // check for null/empty values
                 var authors = titleInfo.BookAuthors.Select(x => x.ToString()).Aggregate((x, y) => x + ";" + y);
                 if (authors is not null)
                 {
@@ -449,6 +455,29 @@ namespace bcollection.infr
 
             // reading
             return await new FB2Reader().ReadAsync(stream, loadSettings);
+        }
+    }
+
+    internal class PdfMetaExtractor : IMetaExtractor
+    {
+        public Task<MetaData[]> Extract(byte[] data)
+        {
+            var result = new List<MetaData>();
+            using (PdfDocument document = PdfDocument.Open(data))
+            {
+                var firstPage = document.GetPage(1);
+                var image = firstPage.GetImages().FirstOrDefault();
+                if (image is not null)
+                {
+                    result.Add(new MetaData(
+                        "cover",
+                        new MetaFile(
+                            // todo - random id ref
+                            new ItemFileRef(document.Information.Title),
+                            image.RawBytes.ToArray())));
+                }
+            }
+            return Task.FromResult(result.ToArray());
         }
     }
 }

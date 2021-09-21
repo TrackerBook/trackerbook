@@ -44,9 +44,9 @@ namespace bcollection
             findCommand.AddArgument(new Argument<string>("prefix"));
             findCommand.Handler = CommandHandler.Create<string>((prefix) =>
             {
-                var bCollection = provider.GetService<IBCollection>()!;
+                var bCollection = provider.GetRequiredService<IBCollection>();
                 var result = bCollection.Find(prefix);
-                var logger = provider.GetService<ILoggerFactory>()!.CreateLogger<Program>();
+                var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 foreach (var item in result)
                 {
                     logger.LogInformation(item.checksum.ToString());
@@ -69,7 +69,7 @@ namespace bcollection
             {
                 var bCollection = provider.GetService<IBCollection>()!;
                 var result = bCollection.DeleteItem(checksum);
-                var logger = provider.GetService<ILoggerFactory>()!.CreateLogger<Program>();
+                var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 if (result is Deleted)
                 {
                     logger.LogInformation("Deleted item.");
@@ -91,7 +91,7 @@ namespace bcollection
             deleteCommand.Handler = CommandHandler.Create<string>((checksum) =>
             {
                 var bCollection = provider.GetService<IBCollection>()!;
-                var logger = provider.GetService<ILoggerFactory>()!.CreateLogger<Program>();
+                var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 foreach (var item in bCollection.GetItems())
                 {
                     var result = bCollection.DeleteItem(item.checksum.value);
@@ -117,7 +117,7 @@ namespace bcollection
             listCommand.Handler = CommandHandler.Create(() =>
             {
                 var bCollection = provider.GetService<IBCollection>()!;
-                var logger = provider.GetService<ILoggerFactory>()!.CreateLogger<Program>();
+                var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 foreach (var item in bCollection.GetItems())
                 {
                     logger.LogInformation(item.checksum.ToString());
@@ -132,9 +132,9 @@ namespace bcollection
             addCommand.AddArgument(new Argument<FileInfo>("fileInfo"));
             addCommand.Handler = CommandHandler.Create<FileInfo>(async (fileInfo) =>
             {
-                var bCollection = provider.GetService<IBCollection>()!;
-                var itemCreator = provider.GetService<IItemCreator>()!;
-                var logger = provider.GetService<ILoggerFactory>()!.CreateLogger<Program>();
+                var bCollection = provider.GetRequiredService<IBCollection>();
+                var itemCreator = provider.GetRequiredService<IItemCreator>();
+                var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 var item = await itemCreator.Create(fileInfo.FullName, File.ReadAllBytes(fileInfo.FullName));
                 var result = bCollection.AddItem(item);
                 switch (result)
