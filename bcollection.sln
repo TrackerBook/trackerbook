@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bc-lib", "lib\bc-lib.csproj", "{9BD7F5E6-36CA-4542-84EF-9926C7753E5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bc-cli", "cli\bc-cli.csproj", "{3E756505-DB07-48F1-AEC5-53FF8A530D44}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9BD7F5E6-36CA-4542-84EF-9926C7753E5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BD7F5E6-36CA-4542-84EF-9926C7753E5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BD7F5E6-36CA-4542-84EF-9926C7753E5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BD7F5E6-36CA-4542-84EF-9926C7753E5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E756505-DB07-48F1-AEC5-53FF8A530D44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E756505-DB07-48F1-AEC5-53FF8A530D44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E756505-DB07-48F1-AEC5-53FF8A530D44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E756505-DB07-48F1-AEC5-53FF8A530D44}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
