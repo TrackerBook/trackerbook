@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bc-lib", "lib\bc-lib.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bc-cli", "cli\bc-cli.csproj", "{3E756505-DB07-48F1-AEC5-53FF8A530D44}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bc-ui", "ui\bc-ui.csproj", "{FCD36675-10E6-428D-9B46-A24B408D8FBE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{3E756505-DB07-48F1-AEC5-53FF8A530D44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E756505-DB07-48F1-AEC5-53FF8A530D44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E756505-DB07-48F1-AEC5-53FF8A530D44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCD36675-10E6-428D-9B46-A24B408D8FBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCD36675-10E6-428D-9B46-A24B408D8FBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCD36675-10E6-428D-9B46-A24B408D8FBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCD36675-10E6-428D-9B46-A24B408D8FBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
