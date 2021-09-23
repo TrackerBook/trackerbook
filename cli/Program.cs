@@ -23,6 +23,7 @@ namespace bcollection
                 .AddSingleton<IChecksumCreator, ChecksumCreator>()
                 .AddSingleton<IMetaExtractorFabric, MetaExtractorFabric>()
                 .AddSingleton<IItemCreator, ItemCreator>()
+                .AddSingleton<IFileRefIdCreator, FileRefIdCreator>()
                 .BuildServiceProvider();
             Console.OutputEncoding = Encoding.UTF8;
 

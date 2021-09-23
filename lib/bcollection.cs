@@ -76,6 +76,11 @@ namespace bcollection.infr
     {
         Task<MetaData[]> Extract(byte[] data);
     }
+
+    public interface IFileRefIdCreator
+    {
+        string Create();
+    }
 }
 
 #endregion
@@ -381,10 +386,17 @@ namespace bcollection.infr
 
     public class MetaExtractorFabric : IMetaExtractorFabric
     {
+        private readonly IFileRefIdCreator fileRefIdCreator;
+
+        public MetaExtractorFabric(IFileRefIdCreator fileRefIdCreator)
+        {
+            this.fileRefIdCreator = fileRefIdCreator;
+        }
+
         public IMetaExtractor[] Create(string extension) => extension switch
         {
-            ".fb2" => new IMetaExtractor[] { new Fb2MetaExtractor() },
-            ".pdf" => new IMetaExtractor[] { new PdfMetaExtractor() },
+            ".fb2" => new IMetaExtractor[] { new Fb2MetaExtractor(this.fileRefIdCreator) },
+            ".pdf" => new IMetaExtractor[] { new PdfMetaExtractor(this.fileRefIdCreator) },
             _ => Array.Empty<IMetaExtractor>()
         };
     }
@@ -396,6 +408,13 @@ namespace bcollection.infr
 
     public class Fb2MetaExtractor : IMetaExtractor
     {
+        private readonly IFileRefIdCreator fileRefIdCreator;
+
+        public Fb2MetaExtractor(IFileRefIdCreator fileRefIdCreator)
+        {
+            this.fileRefIdCreator = fileRefIdCreator;
+        }
+
         public async Task<MetaData[]> Extract(byte[] data)
         {
             using var stream = new MemoryStream(data);
@@ -411,8 +430,7 @@ namespace bcollection.infr
                     result.Add(new MetaData(
                         "cover",
                         new MetaFile(
-                            // todo - random id ref
-                            new ItemFileRef(titleInfo.BookTitle.Text),
+                            new ItemFileRef(fileRefIdCreator.Create()),
                             imageData)));
                 }
                 // check for null/empty values
@@ -460,6 +478,13 @@ namespace bcollection.infr
 
     public class PdfMetaExtractor : IMetaExtractor
     {
+        private readonly IFileRefIdCreator fileRefIdCreator;
+
+        public PdfMetaExtractor(IFileRefIdCreator fileRefIdCreator)
+        {
+            this.fileRefIdCreator = fileRefIdCreator;
+        }
+
         public Task<MetaData[]> Extract(byte[] data)
         {
             var result = new List<MetaData>();
@@ -472,13 +497,17 @@ namespace bcollection.infr
                     result.Add(new MetaData(
                         "cover",
                         new MetaFile(
-                            // todo - random id ref
-                            new ItemFileRef(document.Information.Title),
+                            new ItemFileRef(fileRefIdCreator.Create()),
                             image.RawBytes.ToArray())));
                 }
             }
             return Task.FromResult(result.ToArray());
         }
+    }
+
+    public class FileRefIdCreator : IFileRefIdCreator
+    {
+        public string Create() => "$" + Guid.NewGuid().ToString("N");
     }
 }
 
