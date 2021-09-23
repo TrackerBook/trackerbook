@@ -24,6 +24,8 @@ namespace bcollection
                 .AddSingleton<IMetaExtractorFabric, MetaExtractorFabric>()
                 .AddSingleton<IItemCreator, ItemCreator>()
                 .AddSingleton<IFileRefIdCreator, FileRefIdCreator>()
+                .AddSingleton<IMetaExtractor, Fb2MetaExtractor>()
+                .AddSingleton<IMetaExtractor, PdfMetaExtractor>()
                 .BuildServiceProvider();
             Console.OutputEncoding = Encoding.UTF8;
 

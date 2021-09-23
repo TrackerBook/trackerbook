@@ -72,8 +72,17 @@ namespace bcollection.infr
         IMetaExtractor[] Create(string extension);
     }
 
+    public enum SupportedFileFormats
+    {
+        noop,
+        fb2,
+        pdf
+    }
+
     public interface IMetaExtractor
     {
+        SupportedFileFormats FileFormat { get; }
+
         Task<MetaData[]> Extract(byte[] data);
     }
 
@@ -386,23 +395,26 @@ namespace bcollection.infr
 
     public class MetaExtractorFabric : IMetaExtractorFabric
     {
-        private readonly IFileRefIdCreator fileRefIdCreator;
+        private readonly IEnumerable<IMetaExtractor> metaExtractors;
 
-        public MetaExtractorFabric(IFileRefIdCreator fileRefIdCreator)
+        public MetaExtractorFabric(IEnumerable<IMetaExtractor> metaExtractors)
         {
-            this.fileRefIdCreator = fileRefIdCreator;
+            this.metaExtractors = metaExtractors;
         }
 
-        public IMetaExtractor[] Create(string extension) => extension switch
-        {
-            ".fb2" => new IMetaExtractor[] { new Fb2MetaExtractor(this.fileRefIdCreator) },
-            ".pdf" => new IMetaExtractor[] { new PdfMetaExtractor(this.fileRefIdCreator) },
-            _ => Array.Empty<IMetaExtractor>()
-        };
+        public IMetaExtractor[] Create(string extension) => this.metaExtractors
+            .Where(x => x.FileFormat == extension switch
+            {
+                ".fb2" => SupportedFileFormats.fb2,
+                ".pdf" => SupportedFileFormats.pdf,
+                _ => SupportedFileFormats.noop
+            }).ToArray();
     }
 
     public class NoMetaExtractor : IMetaExtractor
     {
+        public SupportedFileFormats FileFormat => SupportedFileFormats.noop;
+
         public Task<MetaData[]> Extract(byte[] data) => Task.FromResult(Array.Empty<MetaData>());
     }
 
@@ -414,6 +426,8 @@ namespace bcollection.infr
         {
             this.fileRefIdCreator = fileRefIdCreator;
         }
+
+        public SupportedFileFormats FileFormat => SupportedFileFormats.fb2;
 
         public async Task<MetaData[]> Extract(byte[] data)
         {
@@ -484,6 +498,8 @@ namespace bcollection.infr
         {
             this.fileRefIdCreator = fileRefIdCreator;
         }
+
+        public SupportedFileFormats FileFormat => SupportedFileFormats.pdf;
 
         public Task<MetaData[]> Extract(byte[] data)
         {
