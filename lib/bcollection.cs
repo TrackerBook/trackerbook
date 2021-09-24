@@ -455,21 +455,36 @@ namespace bcollection.infr
                         "authors",
                         new MetaString(authors)));
                 }
-                result.Add(new MetaData(
-                    "authors",
-                    new MetaDateTime(titleInfo.BookDate.DateValue)));
-                result.Add(new MetaData(
-                    "title",
-                    new MetaString(titleInfo.BookTitle.Text)));
-                result.Add(new MetaData(
-                    "genres",
-                    new MetaString(titleInfo.Genres.Select(x => x.Genre).Aggregate((x, y) => x + ";" + y))));
-                result.Add(new MetaData(
-                    "keywords",
-                    new MetaString(titleInfo.Keywords.Text)));
-                result.Add(new MetaData(
-                    "language",
-                    new MetaString(titleInfo.Language)));
+                if (titleInfo.BookDate is not null && titleInfo.BookDate.DateValue != default)
+                {
+                    result.Add(new MetaData(
+                        "authors",
+                        new MetaDateTime(titleInfo.BookDate.DateValue)));
+                }
+                if (!string.IsNullOrWhiteSpace(titleInfo.BookTitle?.Text))
+                {
+                    result.Add(new MetaData(
+                        "title",
+                        new MetaString(titleInfo.BookTitle.Text)));
+                }
+                if (titleInfo.Genres is not null)
+                {
+                    result.Add(new MetaData(
+                        "genres",
+                        new MetaString(titleInfo.Genres.Select(x => x.Genre).Aggregate((x, y) => x + ";" + y))));
+                }
+                if (!string.IsNullOrWhiteSpace(titleInfo.Keywords?.Text))
+                {
+                    result.Add(new MetaData(
+                        "keywords",
+                        new MetaString(titleInfo.Keywords.Text)));
+                }
+                if (!string.IsNullOrWhiteSpace(titleInfo.Language))
+                {
+                    result.Add(new MetaData(
+                        "language",
+                        new MetaString(titleInfo.Language)));
+                }
                 return result.ToArray();
             }
             
