@@ -1,17 +1,56 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:bc_ui.ViewModels"
+        xmlns:local="clr-namespace:bc_ui.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
         x:Class="bc_ui.Views.MainWindow"
+       
+        WindowStartupLocation="CenterScreen"
         Icon="/Assets/avalonia-logo.ico"
+        Name="MainWindow"
         Title="bc_ui">
-
+ <!-- ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        ExtendClientAreaChromeHints="PreferSystemChrome" -->
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="File"></NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
 
+    <!-- <Window.Resources>
+        <Bitmap x:key="test">/Assets/test.png</Bitmap>
+    </Window.Resources> -->
+
+    <!-- <Window.Resources>
+        <converters:DateTimeConvertor x:Key="dateTimeToDate"/>
+    </Window.Resources> -->
+
+    <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
+        <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Name="SearchTermTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0"/>
+        <!-- <TextBlock Name="DropState" Text="{Binding FileNames}" /> -->
+        <ListBox Items="{Binding Items}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="100, *, 100" HorizontalAlignment="Stretch">
+                        <Image Source="/Assets/test.png" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
+                        <DockPanel Margin="5,0,0,0" Grid.Column="1">
+                            <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
+                            <TextBlock Margin="0,5,20,0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" DockPanel.Dock="Top" FontSize="12"/>
+                            <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
+                            <!-- <Border Background="LightGreen" DockPanel.Dock="Top" CornerRadius="4" Padding="1" HorizontalAlignment="Stretch">
+                                <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
+                            </Border> -->
+                        </DockPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
 </Window>
