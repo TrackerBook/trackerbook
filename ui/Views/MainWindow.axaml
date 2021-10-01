@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:bc_ui.ViewModels"
+        xmlns:sys="using:System"
         xmlns:local="clr-namespace:bc_ui.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -35,12 +36,12 @@
     <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
         <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Name="SearchTermTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0"/>
         <!-- <TextBlock Name="DropState" Text="{Binding FileNames}" /> -->
-        <ListBox Items="{Binding Items}">
+        <ListBox Items="{Binding Items}" HorizontalAlignment="Stretch" Background="White">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Grid ColumnDefinitions="100, *, 100" HorizontalAlignment="Stretch">
+                    <Grid ColumnDefinitions="100, *, 120" HorizontalAlignment="Stretch" Width="{Binding $parent[ListBoxItem].Presenter.Bounds.Width}">
                         <Image Source="/Assets/test.png" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
-                        <DockPanel Margin="5,0,0,0" Grid.Column="1">
+                        <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
                             <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
                             <TextBlock Margin="0,5,20,0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" DockPanel.Dock="Top" FontSize="12"/>
                             <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
@@ -48,6 +49,7 @@
                                 <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
                             </Border> -->
                         </DockPanel>
+                        <Button Grid.Column="2" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="100" Margin="0,0,20,0" Content="Delete"></Button>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
