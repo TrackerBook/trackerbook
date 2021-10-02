@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using bc_ui.ViewModels;
 using bc_ui.Views;
+using Splat;
 
 namespace bc_ui
 {
@@ -19,11 +20,13 @@ namespace bc_ui
             {
                 desktop.MainWindow = new MainWindow
                 {
-                    DataContext = new MainWindowViewModel(),
+                    DataContext = GetRequiredService<MainWindowViewModel>()
                 };
             }
 
             base.OnFrameworkInitializationCompleted();
         }
+
+        private static T GetRequiredService<T>() => Locator.Current.GetRequiredService<T>();
     }
 }

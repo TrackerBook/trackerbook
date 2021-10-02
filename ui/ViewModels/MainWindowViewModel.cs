@@ -1,22 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using bc_ui.Models;
+using bcollection.app;
 using ReactiveUI;
 
 namespace bc_ui.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        public MainWindowViewModel()
+        public MainWindowViewModel(IBCollection bCollection)
         {
-            var result = new List<Item>();
-            for (var i = 0; i < 100; i++)
-            {
-                result.Add(new Item { Name = "Name of the book" + i, Path = "C:\\Windows\\Local\\Documents\\test" + i });
-            }
-            Items = new ObservableCollection<Item>(result);
+            Items = new ObservableCollection<UiItem>(bCollection.GetItems().Select(x => UiItem.Map(x)));
         }
 
         private string searchText = string.Empty;
@@ -33,6 +30,6 @@ namespace bc_ui.ViewModels
             set => this.RaiseAndSetIfChanged(ref fileNames, value);
         }
 
-        public ObservableCollection<Item> Items { get; private set; }
+        public ObservableCollection<UiItem> Items { get; private set; }
     }
 }

@@ -11,7 +11,7 @@ namespace bcollection.domain
     public interface IMetaValue { }
     public record MetaNumber(int value) : IMetaValue;
     public record MetaString(string value) : IMetaValue;
-    public record MetaFile(ItemFileRef reference, byte[]? value) : IMetaValue;
+    public record MetaFile(ItemFileRef reference, string fileName, byte[]? value) : IMetaValue;
     public record MetaDateTime(DateTime dateTime) : IMetaValue;
     public record MetaData(string name, IMetaValue value);
     public record Item(Checksum checksum, MetaData[] metadata);
@@ -99,6 +99,7 @@ namespace bcollection.infr
 namespace bcollection.app
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Security.Cryptography;
     using bcollection.domain;
@@ -142,7 +143,7 @@ namespace bcollection.app
                 {
                     return new Error("Can't add item.");
                 }
-                foreach (var fileMeta in item.metadata.OfType<MetaFile>())
+                foreach (var fileMeta in item.metadata.Select(x => x.value).OfType<MetaFile>())
                 {
                     if (!this.fileStorage.Post(fileMeta))
                     {
@@ -211,7 +212,29 @@ namespace bcollection.app
 
         public Item[] Find(string checksumPrefix) => this.storage.Find(checksumPrefix);
 
-        public Item[] GetItems() => storage.Get();
+        public Item[] GetItems()
+        {
+            return storage.Get().Select(x =>
+            {
+                var updatedMetaData = new List<MetaData>();
+                foreach (var currentMD in x.metadata)
+                {
+                    if (currentMD.value is MetaFile mf)
+                    {
+                        var withData = this.fileStorage.Get(mf.reference);
+                        if (withData is not null)
+                        {
+                            updatedMetaData.Add(new MetaData(currentMD.name, withData));
+                        }
+                    }
+                    else
+                    {
+                        updatedMetaData.Add(currentMD);
+                    }
+                }
+                return new Item(x.checksum, updatedMetaData.ToArray());
+            }).ToArray();
+        }
     }
 }
 
@@ -260,7 +283,7 @@ namespace bcollection.infr
                         bson[metadata].AsArray.Select(x => new MetaData(x[name], x[value] switch
                         {
                             _ when x[value].IsString && x[value].AsString.StartsWith("$") =>
-                                (IMetaValue)new MetaFile(new ItemFileRef(x[value].AsString), null),
+                                (IMetaValue)new MetaFile(new ItemFileRef(x[value].AsString), string.Empty, null),
                             _ when x[value].IsString => (IMetaValue)new MetaString(x[value].AsString),
                             _ when x[value].IsInt32 => (IMetaValue)new MetaNumber(x[value].AsInt32),
                             _ when x[value].IsDateTime => (IMetaValue)new MetaDateTime(x[value].AsDateTime),
@@ -331,7 +354,7 @@ namespace bcollection.infr
             }
             using var memory = new MemoryStream();
             file.CopyTo(memory);
-            return new MetaFile(reference, memory.ToArray());
+            return new MetaFile(reference, file.Filename, memory.ToArray());
         });
 
         public bool Post(MetaFile itemFile) => UsingDB<bool>(st =>
@@ -344,7 +367,7 @@ namespace bcollection.infr
             using var memoryStream = new MemoryStream(itemFile.value);
             if (file is null)
             {
-                st.Upload(itemFile.reference.id, string.Empty, memoryStream);
+                st.Upload(itemFile.reference.id, itemFile.fileName, memoryStream);
             }
             else
             {
@@ -441,10 +464,12 @@ namespace bcollection.infr
                 if (fb2file.Images.FirstOrDefault().Key == image?.Substring(1))
                 {
                     var imageData = fb2file.Images.FirstOrDefault().Value.BinaryData;
+                    var key = fb2file.Images.FirstOrDefault().Key;
                     result.Add(new MetaData(
                         "cover",
                         new MetaFile(
                             new ItemFileRef(fileRefIdCreator.Create()),
+                            key,
                             imageData)));
                 }
                 // check for null/empty values
@@ -523,12 +548,14 @@ namespace bcollection.infr
             {
                 var firstPage = document.GetPage(1);
                 var image = firstPage.GetImages().FirstOrDefault();
+                // todo need to find file name
                 if (image is not null)
                 {
                     result.Add(new MetaData(
                         "cover",
                         new MetaFile(
                             new ItemFileRef(fileRefIdCreator.Create()),
+                            string.Empty,
                             image.RawBytes.ToArray())));
                 }
             }

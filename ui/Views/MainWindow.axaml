@@ -40,7 +40,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid ColumnDefinitions="100, *, 120" HorizontalAlignment="Stretch" Width="{Binding $parent[ListBoxItem].Presenter.Bounds.Width}">
-                        <Image Source="/Assets/test.png" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
+                        <Image Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
                         <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
                             <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
                             <TextBlock Margin="0,5,20,0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" DockPanel.Dock="Top" FontSize="12"/>
