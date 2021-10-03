@@ -1,6 +1,6 @@
-using System.Drawing;
 using System.IO;
 using Avalonia.Data.Converters;
+using Avalonia.Media.Imaging;
 
 namespace bc_ui.Converters
 {
@@ -15,7 +15,7 @@ namespace bc_ui.Converters
                 }
 
                 using var stream = new MemoryStream(value);
-                return new Bitmap(stream);
+                return Bitmap.DecodeToHeight(stream, 100);
             });
     }
 }

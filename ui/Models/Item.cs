@@ -1,4 +1,6 @@
 using System;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using bcollection.domain;
 
@@ -21,11 +23,10 @@ namespace bc_ui.Models
         public static UiItem Map(Item item)
         {
             var dt = (item.metadata.FirstOrDefault(x => x.name == "createdDate")?.value as MetaDateTime)?.dateTime;
-            var ttt = (item.metadata.FirstOrDefault(x => x.name == "cover")?.value as MetaFile)?.value ?? Array.Empty<byte>();
+            //var ttt = (item.metadata.FirstOrDefault(x => x.name == "cover")?.value as MetaFile)?.value ?? Array.Empty<byte>();
             return new UiItem
             {
-                Name = ttt.Length.ToString(),
-                //Name = (item.metadata.FirstOrDefault(x => x.name == "name")?.value as MetaString)?.value ?? string.Empty,
+                Name = (item.metadata.FirstOrDefault(x => x.name == "name")?.value as MetaString)?.value ?? string.Empty,
                 Created = dt.HasValue ? dt.Value : DateTime.Now,
                 Path = (item.metadata.FirstOrDefault(x => x.name == "path")?.value as MetaString)?.value ?? string.Empty,
                 Image = (item.metadata.FirstOrDefault(x => x.name == "cover")?.value as MetaFile)?.value ?? Array.Empty<byte>(),

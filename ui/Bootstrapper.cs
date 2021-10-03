@@ -11,24 +11,24 @@ namespace bc_ui
     {
         public static void Register(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver)
         {
-            services.Register<IStorage>(() => new Storage());
-            services.Register<IFileStorage>(() => new FileStorage());
-            services.Register<IChecksumCreator>(() => new ChecksumCreator());
-            services.Register<IMetaExtractorFabric>(() => new MetaExtractorFabric(
+            services.RegisterLazySingleton<IStorage>(() => new Storage());
+            services.RegisterLazySingleton<IFileStorage>(() => new FileStorage());
+            services.RegisterLazySingleton<IChecksumCreator>(() => new ChecksumCreator());
+            services.RegisterLazySingleton<IMetaExtractorFabric>(() => new MetaExtractorFabric(
                 resolver.GetServices<IMetaExtractor>()
             ));
-            services.Register<IItemCreator>(() => new ItemCreator(
+            services.RegisterLazySingleton<IItemCreator>(() => new ItemCreator(
                 resolver.GetRequiredService<IChecksumCreator>(),
                 resolver.GetRequiredService<IMetaExtractorFabric>()
             ));
-            services.Register<IFileRefIdCreator>(() => new FileRefIdCreator());
-            services.Register<IMetaExtractor>(() => new Fb2MetaExtractor(
+            services.RegisterLazySingleton<IFileRefIdCreator>(() => new FileRefIdCreator());
+            services.RegisterLazySingleton<IMetaExtractor>(() => new Fb2MetaExtractor(
                 resolver.GetRequiredService<IFileRefIdCreator>()
             ));
-            services.Register<IMetaExtractor>(() => new PdfMetaExtractor(
+            services.RegisterLazySingleton<IMetaExtractor>(() => new PdfMetaExtractor(
                 resolver.GetRequiredService<IFileRefIdCreator>()
             ));
-            services.Register<IBCollection>(() => new BCollection(
+            services.RegisterLazySingleton<IBCollection>(() => new BCollection(
                 new LoggerFactory(),
                 resolver.GetRequiredService<IStorage>(),
                 resolver.GetRequiredService<IFileStorage>()
