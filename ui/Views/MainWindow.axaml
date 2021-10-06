@@ -35,7 +35,7 @@
 
     <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
         <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Name="SearchTermTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0"/>
-        <!-- <TextBlock Name="DropState" Text="{Binding FileNames}" /> -->
+        <TextBlock DockPanel.Dock="Top" Name="DropState" Text="{Binding FileNames}" />
         <ListBox Items="{Binding Items}" HorizontalAlignment="Stretch" Background="White">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -49,7 +49,7 @@
                                 <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
                             </Border> -->
                         </DockPanel>
-                        <Button Grid.Column="2" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="100" Margin="0,0,20,0" Content="Delete"></Button>
+                        <Button Command="{Binding DataContext.OnClickCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="2" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="100" Margin="0,0,20,0" Content="Delete"></Button>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

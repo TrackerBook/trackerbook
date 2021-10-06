@@ -548,15 +548,28 @@ namespace bcollection.infr
             {
                 var firstPage = document.GetPage(1);
                 var image = firstPage.GetImages().FirstOrDefault();
-                // todo need to find file name
                 if (image is not null)
                 {
-                    result.Add(new MetaData(
-                        "cover",
-                        new MetaFile(
-                            new ItemFileRef(fileRefIdCreator.Create()),
-                            string.Empty,
-                            image.RawBytes.ToArray())));
+                    byte[] pngBytes;
+                    if (image.TryGetPng(out pngBytes))
+                    {
+                        result.Add(new MetaData(
+                            "cover",
+                            new MetaFile(
+                                new ItemFileRef(fileRefIdCreator.Create()),
+                                "cover.png",
+                                pngBytes)));
+                    }
+                    else
+                    {
+                        result.Add(new MetaData(
+                            "cover",
+                            new MetaFile(
+                                new ItemFileRef(fileRefIdCreator.Create()),
+                                // TODO looks like it is not always the case and it can be any format
+                                "cover.jpg",
+                                image.RawBytes.ToArray())));
+                    }
                 }
             }
             return Task.FromResult(result.ToArray());

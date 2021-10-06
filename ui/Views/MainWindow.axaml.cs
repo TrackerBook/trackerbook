@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
@@ -36,11 +37,12 @@ namespace bc_ui.Views
                 }
             }
 
-            void Drop(object sender, DragEventArgs e)
+            async void Drop(object sender, DragEventArgs e)
             {
                 if (e.Data.Contains(DataFormats.FileNames))
                 {
-                    ((MainWindowViewModel)this.DataContext).FileNames = string.Join(Environment.NewLine, e.Data.GetFileNames());
+                    ((MainWindowViewModel)this.DataContext).FileNames = string.Join("", e.Data.GetFileNames());
+                    await ((MainWindowViewModel)this.DataContext).UploadFiles(e.Data.GetFileNames());
                 }
             }
 

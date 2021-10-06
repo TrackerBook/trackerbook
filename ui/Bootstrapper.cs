@@ -34,7 +34,8 @@ namespace bc_ui
                 resolver.GetRequiredService<IFileStorage>()
             ));
             services.Register<MainWindowViewModel>(() => new MainWindowViewModel(
-                resolver.GetRequiredService<IBCollection>()
+                resolver.GetRequiredService<IBCollection>(),
+                resolver.GetRequiredService<IItemCreator>()
             ));
         }
 
