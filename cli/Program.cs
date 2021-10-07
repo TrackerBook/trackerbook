@@ -143,10 +143,10 @@ namespace bcollection
                 switch (result)
                 {
                     case Added addedResult:
-                        logger.LogInformation($"Added: {addedResult.checksum ?? "null"}");
+                        logger.LogInformation($"Added: {addedResult.item.checksum.value ?? "null"}");
                         break;
                     case AlreadyExists alreadyExistsResult:
-                        logger.LogInformation($"Already exists: {alreadyExistsResult.checksum ?? "null"}");
+                        logger.LogInformation($"Already exists: {alreadyExistsResult.item.checksum.value ?? "null"}");
                         break;
                 }
             });

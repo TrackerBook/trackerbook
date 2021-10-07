@@ -16,10 +16,10 @@ namespace bcollection.domain
     public record MetaData(string name, IMetaValue value);
     public record Item(Checksum checksum, MetaData[] metadata);
     public interface Result { };
-    public record Updated(string checksum) : Result;
-    public record Deleted(string checksum) : Result;
-    public record Added(string checksum) : Result;
-    public record AlreadyExists(string checksum) : Result;
+    public record Updated(Item item) : Result;
+    public record Deleted(Item item) : Result;
+    public record Added(Item item) : Result;
+    public record AlreadyExists(Item item) : Result;
     public record Error(string message) : Result;
 }
 
@@ -137,7 +137,7 @@ namespace bcollection.app
                 var existingItem = this.storage.Get(item.checksum.value);
                 if (existingItem is not null)
                 {
-                    return new AlreadyExists(existingItem.checksum.value);
+                    return new AlreadyExists(existingItem);
                 }
                 if (!this.storage.Put(item))
                 {
@@ -150,7 +150,7 @@ namespace bcollection.app
                         return new Error("Can't upload file.");
                     }
                 }
-                return new Added(item.checksum.value);
+                return new Added(item);
             }
         }
 
@@ -166,7 +166,7 @@ namespace bcollection.app
             extendedMeta[extendedMeta.Length - 1] = tag;
 
             return storage.Post(item with { metadata = extendedMeta })
-                ? new Updated(item.checksum.value)
+                ? new Updated(item)
                 : new Error("Can't add metadata.");
         }
 
@@ -185,7 +185,7 @@ namespace bcollection.app
                 }
             }
             return this.storage.Delete(item)
-                ? new Deleted(item.checksum.value)
+                ? new Deleted(item)
                 : new Error("Can't delete item.");
         }
 
@@ -206,7 +206,7 @@ namespace bcollection.app
                 }
             }
             return storage.Post(item with { metadata = reducedMeta })
-                ? new Updated(item.checksum.value)
+                ? new Updated(item)
                 : new Error("Can't delete metadata.");
         }
 

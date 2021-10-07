@@ -39,7 +39,15 @@ namespace bc_ui.ViewModels
 
         public void OnClickCommand(string checksum)
         {
-            bCollection.DeleteItem(checksum);
+            var result = bCollection.DeleteItem(checksum);
+            if (result is Deleted)
+            {
+                var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
+                if (existingItem is not null)
+                {
+                    Items.Remove(existingItem);
+                }
+            }
         }
 
         public async Task UploadFiles(IEnumerable<string> fileNames)
@@ -51,12 +59,13 @@ namespace bc_ui.ViewModels
                 var item = await itemCreator.Create(fileName, data);
                 
                 var result = bCollection.AddItem(item);
-                if (result is Added)
+                if (result is Added added)
                 {
-                    Console.WriteLine("Added" + item.checksum.value);
+                    Items.Add(UiItem.Map(added.item));
                 }
                 else if (result is AlreadyExists)
                 {
+                    // todo
                     Console.WriteLine("AlreadyExists" + item.checksum.value);
                 }
             }
