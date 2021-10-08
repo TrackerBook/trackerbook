@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.ReactiveUI;
@@ -15,7 +16,9 @@ namespace bc_ui
         [STAThread]
         public static void Main(string[] args)
         {
-            Trace.Listeners.Add(new TextWriterTraceListener("log.log", "myListener"));
+            const string logFileName = "log.txt";
+            if (File.Exists(logFileName)) File.Delete(logFileName);
+            Trace.Listeners.Add(new TextWriterTraceListener(logFileName, "myListener"));
             try
             {
                 Bootstrapper.Register(Locator.CurrentMutable, Locator.Current);
