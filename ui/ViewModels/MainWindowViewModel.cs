@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Interactivity;
+using Avalonia.Logging;
 using bc_ui.Models;
 using bcollection.app;
 using bcollection.domain;
@@ -18,6 +19,7 @@ namespace bc_ui.ViewModels
     {
         public MainWindowViewModel(IBCollection bCollection, IItemCreator itemCreator)
         {
+            Logger.Sink.Log(LogEventLevel.Information, nameof(MainWindowViewModel), "constructor", "init");
             this.bCollection = bCollection;
             this.itemCreator = itemCreator;
             Items = new ObservableCollection<UiItem>(bCollection.GetItems().Select(x => UiItem.Map(x)));
