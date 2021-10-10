@@ -33,31 +33,41 @@
         <converters:DateTimeConvertor x:Key="dateTimeToDate"/>
     </Window.Resources> -->
 
-    <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
-        <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Name="SearchTermTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0"/>
-        <TextBlock DockPanel.Dock="Top" Name="DropState" Text="{Binding FileNames}" />
-        <ListBox Items="{Binding Items}" Background="White">
-            <ListBox.Styles>
-                <Style Selector="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListBox.Styles>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid ColumnDefinitions="100, *, 120">
-                        <Image Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
-                        <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
-                            <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
-                            <TextBlock Margin="0,5,20,0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" DockPanel.Dock="Top" FontSize="12"/>
-                            <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
-                            <!-- <Border Background="LightGreen" DockPanel.Dock="Top" CornerRadius="4" Padding="1" HorizontalAlignment="Stretch">
-                                <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
-                            </Border> -->
-                        </DockPanel>
-                        <Button Command="{Binding DataContext.OnClickCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="2" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="100" Margin="0,0,20,0" Content="Delete"></Button>
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </DockPanel>
+    <Grid>
+        <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
+            <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Name="SearchTermTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0"/>
+            <TextBlock DockPanel.Dock="Top" Name="DropState" Text="{Binding FileNames}" />
+            <ListBox Items="{Binding Items}" Background="White">
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    </Style>
+                </ListBox.Styles>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="100, *, 120">
+                            <Image Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
+                            <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
+                                <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
+                                <TextBlock Margin="0,5,20,0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" DockPanel.Dock="Top" FontSize="12"/>
+                                <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
+                                <!-- <Border Background="LightGreen" DockPanel.Dock="Top" CornerRadius="4" Padding="1" HorizontalAlignment="Stretch">
+                                    <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
+                                </Border> -->
+                            </DockPanel>
+                            <Button Command="{Binding DataContext.OnClickCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="2" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="100" Margin="0,0,20,0" Content="Delete"></Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+        <Border Margin="5,5,5,5" IsVisible="{Binding IsPopupVisible}" Width="350" Height="95" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+            <Border CornerRadius="5" Background="#7f000000">
+                <Panel>
+                    <TextBlock VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5,5,5,5" Foreground="White" TextWrapping="Wrap" Text="{Binding NotificationMessage}" MaxWidth="300" />
+                    <Button Background="Black" Foreground="White" Command="{Binding OnNotificationCloseCommand}" VerticalAlignment="Top" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalContentAlignment="Center" Content="✖️" Height="30" Width="30" FontSize="12" Padding="0,0,0,0"/>
+                </Panel>
+            </Border>
+        </Border>
+    </Grid>
 </Window>

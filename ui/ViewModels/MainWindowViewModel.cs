@@ -32,7 +32,28 @@ namespace bc_ui.ViewModels
             set => this.RaiseAndSetIfChanged(ref searchText, value);
         }
 
+        public bool IsPopupVisible => !string.IsNullOrEmpty(notificationMessage);
+
+        private string notificationMessage = "111 hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello";
+
+        public string NotificationMessage
+        {
+            get => notificationMessage;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref notificationMessage, value);
+                this.RaisePropertyChanged(nameof(IsPopupVisible));
+            }
+        }
+
+        public void OnNotificationCloseCommand()
+        {
+            NotificationMessage = string.Empty;
+        }
+
         private string fileNames = string.Empty;
+        
+
         public string FileNames
         {
             get => fileNames;
