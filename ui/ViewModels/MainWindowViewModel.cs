@@ -34,7 +34,7 @@ namespace bc_ui.ViewModels
 
         public bool IsPopupVisible => !string.IsNullOrEmpty(notificationMessage);
 
-        private string notificationMessage = "111 hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello";
+        private string notificationMessage = string.Empty;
 
         public string NotificationMessage
         {
@@ -60,16 +60,19 @@ namespace bc_ui.ViewModels
             set => this.RaiseAndSetIfChanged(ref fileNames, value);
         }
 
+        private string ShortChecksum(string checksum) => checksum.Substring(0, 8);
+
         public void OnClickCommand(string checksum)
         {
             var result = bCollection.DeleteItem(checksum);
-            if (result is Deleted)
+            if (result is Deleted deletedItem)
             {
                 var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
                 if (existingItem is not null)
                 {
                     Items.Remove(existingItem);
                 }
+                NotificationMessage = $"Deleted '{ShortChecksum(deletedItem.item.checksum.value)}'";
             }
         }
 
@@ -85,11 +88,11 @@ namespace bc_ui.ViewModels
                 if (result is Added added)
                 {
                     Items.Add(UiItem.Map(added.item));
+                    NotificationMessage = $"Added '{ShortChecksum(added.item.checksum.value)}'";
                 }
-                else if (result is AlreadyExists)
+                else if (result is AlreadyExists existingItem)
                 {
-                    // todo
-                    Console.WriteLine("AlreadyExists" + item.checksum.value);
+                    NotificationMessage = $"Already exists '{ShortChecksum(existingItem.item.checksum.value)}'";
                 }
             }
         }
