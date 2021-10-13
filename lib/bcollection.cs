@@ -242,15 +242,19 @@ namespace bcollection.infr
 {
     using System;
     using System.Collections.Generic;
+    using System.Drawing;
+    using System.Drawing.Imaging;
     using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Xml;
     using bcollection.app;
     using bcollection.domain;
     using FB2Library;
     using LiteDB;
-    using UglyToad.PdfPig;
+    //using UglyToad.PdfPig;
+    using PDFiumCore;
 
     public class Storage : IStorage
     {
@@ -543,37 +547,80 @@ namespace bcollection.infr
 
         public Task<MetaData[]> Extract(byte[] data)
         {
-            var result = new List<MetaData>();
-            using (PdfDocument document = PdfDocument.Open(data))
+            IntPtr unmanagedPointer = IntPtr.Zero;
+            try
             {
-                var firstPage = document.GetPage(1);
-                var image = firstPage.GetImages().FirstOrDefault();
-                if (image is not null)
-                {
-                    byte[] pngBytes;
-                    if (image.TryGetPng(out pngBytes))
-                    {
-                        result.Add(new MetaData(
-                            "cover",
-                            new MetaFile(
-                                new ItemFileRef(fileRefIdCreator.Create()),
-                                "cover.png",
-                                pngBytes)));
-                    }
-                    else
-                    {
-                        result.Add(new MetaData(
-                            "cover",
-                            new MetaFile(
-                                new ItemFileRef(fileRefIdCreator.Create()),
-                                // TODO looks like it is not always the case and it can be any format
-                                "cover.jpg",
-                                image.RawBytes.ToArray())));
-                    }
-                }
+                unmanagedPointer = Marshal.AllocHGlobal(data.Length);
+                Marshal.Copy(data, 0, unmanagedPointer, data.Length);
+                var pageIndex = 0;
+                var scale = 2;
+
+                fpdfview.FPDF_InitLibrary();
+
+                var document = fpdfview.FPDF_LoadMemDocument(unmanagedPointer, data.Length, null);
+
+                var page = fpdfview.FPDF_LoadPage(document, pageIndex);
+
+                var size = new FS_SIZEF_();
+                fpdfview.FPDF_GetPageSizeByIndexF(document, 0, size);
+
+                var width = (int)Math.Round(size.Width * scale);
+                var height = (int)Math.Round(size.Height * scale);
+
+                var bitmap = fpdfview.FPDFBitmapCreateEx(
+                    width,
+                    height,
+                    4, // BGRA
+                    IntPtr.Zero,
+                    0);
+
+                fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, width, height, (uint)Color.White.ToArgb());
+
+                // |          | a b 0 |
+                // | matrix = | c d 0 |
+                // |          | e f 1 |
+                using var matrix = new FS_MATRIX_();
+                using var clipping = new FS_RECTF_();
+
+                matrix.A = scale;
+                matrix.B = 0;
+                matrix.C = 0;
+                matrix.D = scale;
+                matrix.E = 0;
+                matrix.F = 0;
+
+                clipping.Left = 0;
+                clipping.Right = width;
+                clipping.Bottom = 0;
+                clipping.Top = height;
+
+                fpdfview.FPDF_RenderPageBitmapWithMatrix(bitmap, page, matrix, clipping, (int)RenderFlags.RenderAnnotations);
+
+                var bitmapImage = new Bitmap(
+                    width,
+                    height,
+                    fpdfview.FPDFBitmapGetStride(bitmap),
+                    PixelFormat.Format32bppArgb,
+                    fpdfview.FPDFBitmapGetBuffer(bitmap));
+
+                using var stream = new MemoryStream();
+                bitmapImage.Save(stream, ImageFormat.Jpeg);
+
+                var result = new MetaData(
+                    "cover",
+                    new MetaFile(
+                        new ItemFileRef(fileRefIdCreator.Create()),
+                        "cover.png",
+                        stream.ToArray()));
+
+                return Task.FromResult(new[] { result });
             }
-            return Task.FromResult(result.ToArray());
+            finally
+            {
+                Marshal.FreeHGlobal(unmanagedPointer);
+            }
         }
+
     }
 
     public class FileRefIdCreator : IFileRefIdCreator
