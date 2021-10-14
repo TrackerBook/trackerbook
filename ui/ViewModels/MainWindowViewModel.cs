@@ -25,6 +25,13 @@ namespace bc_ui.ViewModels
             Items = new ObservableCollection<UiItem>(bCollection.GetItems().Select(x => UiItem.Map(x)));
         }
 
+        private UiItem? selecteditem;
+        public UiItem? SelectedItem
+        {
+            get => selecteditem;
+            set => this.RaiseAndSetIfChanged(ref selecteditem, value);
+        }
+
         private string searchText = string.Empty;
         public string SearchText
         {
@@ -49,15 +56,6 @@ namespace bc_ui.ViewModels
         public void OnNotificationCloseCommand()
         {
             NotificationMessage = string.Empty;
-        }
-
-        private string fileNames = string.Empty;
-        
-
-        public string FileNames
-        {
-            get => fileNames;
-            set => this.RaiseAndSetIfChanged(ref fileNames, value);
         }
 
         private string ShortChecksum(string checksum) => checksum.Substring(0, 8);
@@ -87,12 +85,15 @@ namespace bc_ui.ViewModels
                 var result = bCollection.AddItem(item);
                 if (result is Added added)
                 {
-                    Items.Add(UiItem.Map(added.item));
+                    var itemToAdd = UiItem.Map(added.item);
+                    Items.Add(itemToAdd);
                     NotificationMessage = $"Added '{ShortChecksum(added.item.checksum.value)}'";
+                    SelectedItem = itemToAdd;
                 }
                 else if (result is AlreadyExists existingItem)
                 {
                     NotificationMessage = $"Already exists '{ShortChecksum(existingItem.item.checksum.value)}'";
+                    SelectedItem = Items.FirstOrDefault(x => x.Checksum == existingItem.item.checksum.value);
                 }
             }
         }

@@ -41,7 +41,6 @@ namespace bc_ui.Views
             {
                 if (e.Data.Contains(DataFormats.FileNames))
                 {
-                    ((MainWindowViewModel)this.DataContext).FileNames = string.Join("", e.Data.GetFileNames());
                     await ((MainWindowViewModel)this.DataContext).UploadFiles(e.Data.GetFileNames());
                 }
             }
