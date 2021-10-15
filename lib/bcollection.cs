@@ -177,7 +177,7 @@ namespace bcollection.app
             {
                 return new Error("Can't find item with checksum.");
             }
-            foreach (var fileMeta in item.metadata.OfType<MetaFile>())
+            foreach (var fileMeta in item.metadata.Select(x => x.value).OfType<MetaFile>())
             {
                 if (!this.fileStorage.Delete(fileMeta.reference))
                 {
