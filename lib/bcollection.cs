@@ -242,8 +242,6 @@ namespace bcollection.infr
 {
     using System;
     using System.Collections.Generic;
-    using System.Drawing;
-    using System.Drawing.Imaging;
     using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
@@ -255,6 +253,11 @@ namespace bcollection.infr
     using LiteDB;
     //using UglyToad.PdfPig;
     using PDFiumCore;
+    using SixLabors.ImageSharp;
+    using SixLabors.ImageSharp.Formats.Jpeg;
+    using SixLabors.ImageSharp.Formats.Png;
+    using SixLabors.ImageSharp.PixelFormats;
+    using SixLabors.ImageSharp.Processing;
 
     public class Storage : IStorage
     {
@@ -574,7 +577,7 @@ namespace bcollection.infr
                     IntPtr.Zero,
                     0);
 
-                fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, width, height, (uint)Color.White.ToArgb());
+                fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, width, height, (uint)System.Drawing.Color.White.ToArgb());
 
                 // |          | a b 0 |
                 // | matrix = | c d 0 |
@@ -596,22 +599,21 @@ namespace bcollection.infr
 
                 fpdfview.FPDF_RenderPageBitmapWithMatrix(bitmap, page, matrix, clipping, (int)RenderFlags.RenderAnnotations);
 
-                var bitmapImage = new Bitmap(
-                    width,
-                    height,
-                    fpdfview.FPDFBitmapGetStride(bitmap),
-                    PixelFormat.Format32bppArgb,
-                    fpdfview.FPDFBitmapGetBuffer(bitmap));
+                using var btm = new BmpStream(bitmap);
 
-                using var stream = new MemoryStream();
-                bitmapImage.Save(stream, ImageFormat.Jpeg);
+                var img = SixLabors.ImageSharp.Image.Load(btm);
+
+                img.Mutate(x => x.BackgroundColor(Color.White));
+
+                using var output = new MemoryStream();
+                img.Save(output, new JpegEncoder());
 
                 var result = new MetaData(
                     "cover",
                     new MetaFile(
                         new ItemFileRef(fileRefIdCreator.Create()),
                         "cover.png",
-                        stream.ToArray()));
+                        ImageProcessing.Resize(output.ToArray())));
 
                 return Task.FromResult(new[] { result });
             }
@@ -621,11 +623,202 @@ namespace bcollection.infr
             }
         }
 
+        private class BmpStream : Stream
+        {
+            const uint BmpHeaderSize = 14;
+            const uint DibHeaderSize = 108; // BITMAPV4HEADER
+            const uint PixelArrayOffset = BmpHeaderSize + DibHeaderSize;
+            const uint CompressionMethod = 3; // BI_BITFIELDS
+            const uint MaskR = 0x00_FF_00_00;
+            const uint MaskG = 0x00_00_FF_00;
+            const uint MaskB = 0x00_00_00_FF;
+            const uint MaskA = 0xFF_00_00_00;
+
+            const int BytesPerPixel = 4;
+
+            readonly FpdfBitmapT _bitmap;
+            readonly byte[] _header;
+            private readonly IntPtr _scan0;
+            readonly uint _length;
+            readonly uint _stride;
+            readonly uint _rowLength;
+            private readonly int _widthBitmap;
+            private readonly int _heightBitmap;
+            uint _pos;
+            private int _bitmapStride;
+            static bool hasAlpha = true;
+
+            public BmpStream(FpdfBitmapT bitmap, double dpiX = 72, double dpiY = 72)
+            {
+                _widthBitmap = fpdfview.FPDFBitmapGetWidth(bitmap);
+                _heightBitmap = fpdfview.FPDFBitmapGetHeight(bitmap);
+                _bitmap = bitmap;
+                _rowLength = (uint)BytesPerPixel * (uint)_widthBitmap;
+                _stride = (((uint)BytesPerPixel * 8 * (uint)_widthBitmap + 31) / 32) * 4;
+                _length = PixelArrayOffset + _stride * (uint)_heightBitmap;
+                _header = GetHeader(_length, dpiX, dpiY);
+                _scan0 = fpdfview.FPDFBitmapGetBuffer(bitmap);
+                _pos = 0;
+                _bitmapStride = fpdfview.FPDFBitmapGetStride(bitmap);
+            }
+
+            private byte[] GetHeader(uint fileSize, double dpiX, double dpiY)
+            {
+                const double MetersPerInch = 0.0254;
+
+                byte[] header = new byte[BmpHeaderSize + DibHeaderSize];
+
+                using (var ms = new MemoryStream(header))
+                using (var writer = new BinaryWriter(ms))
+                {
+                    writer.Write((byte)'B'); 
+                    writer.Write((byte)'M');
+                    writer.Write(fileSize);
+                    writer.Write(0u);
+                    writer.Write(PixelArrayOffset);
+                    writer.Write(DibHeaderSize);
+                    writer.Write(_widthBitmap);
+                    writer.Write(-_heightBitmap); // top-down image
+                    writer.Write((ushort)1);
+                    writer.Write((ushort)(BytesPerPixel * 8));
+                    writer.Write(CompressionMethod);
+                    writer.Write(0);
+                    writer.Write((int)Math.Round(dpiX / MetersPerInch));
+                    writer.Write((int)Math.Round(dpiY / MetersPerInch));
+                    writer.Write(0L);
+                    writer.Write(MaskR);
+                    writer.Write(MaskG);
+                    writer.Write(MaskB);
+                    if (hasAlpha)
+                        writer.Write(MaskA);
+                }
+                return header;
+            }
+
+            public override bool CanRead => true;
+
+            public override bool CanSeek => true;
+
+            public override bool CanWrite => false;
+
+            public override long Length => _length;
+
+            public override long Position
+            {
+                get => _pos;
+                set
+                {
+                    if (value < 0 || value >= _length)
+                        throw new ArgumentOutOfRangeException();
+                    _pos = (uint)value;
+                }
+            }
+
+            public override void Flush() { }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                int bytesToRead = count;
+                int returnValue = 0;
+                if (_pos < PixelArrayOffset)
+                {
+                    returnValue = Math.Min(count, (int)(PixelArrayOffset - _pos));
+                    Buffer.BlockCopy(_header, (int)_pos, buffer, offset, returnValue);
+                    _pos += (uint)returnValue;
+                    offset += returnValue;
+                    bytesToRead -= returnValue;
+                }
+
+                if (bytesToRead <= 0)
+                    return returnValue;
+
+                bytesToRead = Math.Min(bytesToRead, (int)(_length - _pos));
+                uint idxBuffer = _pos - PixelArrayOffset;
+
+                if (_stride == _bitmapStride)
+                {
+                    Marshal.Copy(_scan0 + (int)idxBuffer, buffer, offset, bytesToRead);
+                    returnValue += bytesToRead;
+                    _pos += (uint)bytesToRead;
+                    return returnValue;
+                }
+
+                while (bytesToRead > 0)
+                {
+                    int idxInStride = (int)(idxBuffer / _stride);
+                    int leftInRow = Math.Max(0, (int)_rowLength - idxInStride);
+                    int paddingBytes = (int)(_stride - _rowLength);
+                    int read = Math.Min(bytesToRead, leftInRow);
+                    if (read > 0)
+                        Marshal.Copy(_scan0 + (int)idxBuffer, buffer, offset, read);
+                    offset += read;
+                    idxBuffer += (uint)read;
+                    bytesToRead -= read;
+                    returnValue += read;
+                    read = Math.Min(bytesToRead, paddingBytes);
+                    for (int i = 0; i < read; i++)
+                        buffer[offset + i] = 0;
+                    offset += read;
+                    idxBuffer += (uint)read;
+                    bytesToRead -= read;
+                    returnValue += read;
+                }
+                _pos = PixelArrayOffset + (uint)idxBuffer;
+                return returnValue;
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                if (origin == SeekOrigin.Begin)
+                    Position = offset;
+                else if (origin == SeekOrigin.Current)
+                    Position += offset;
+                else if (origin == SeekOrigin.End)
+                    Position = Length + offset;
+                return Position;
+            }
+
+            public override void SetLength(long value) => throw new NotSupportedException();
+
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+            public override void Close()
+            {
+                Marshal.FreeHGlobal(_scan0);
+                base.Close();
+            }
+        }
     }
 
     public class FileRefIdCreator : IFileRefIdCreator
     {
         public string Create() => "$" + Guid.NewGuid().ToString("N");
+    }
+
+
+    public static class ImageProcessing
+    {
+        public static byte[] Resize(byte[] imageBytes)
+        {
+            const int size = 100;
+            using var memoryStream = new MemoryStream(imageBytes);
+            using var image = SixLabors.ImageSharp.Image.Load(memoryStream);
+            int width, height;
+            if (image.Width > image.Height)
+            {
+                width = size;
+                height = Convert.ToInt32(image.Height * size / (double)image.Width);
+            }
+            else
+            {
+                width = Convert.ToInt32(image.Width * size / (double)image.Height);
+                height = size;
+            }
+            using var output = new MemoryStream();
+            image.Save(output, new JpegEncoder());
+
+            return output.ToArray();
+        }
     }
 }
 
