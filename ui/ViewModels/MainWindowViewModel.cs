@@ -74,8 +74,9 @@ namespace bc_ui.ViewModels
             }
         }
 
-        public async Task UploadFiles(IEnumerable<string> fileNames)
+        public async Task UploadFiles(IEnumerable<string>? fileNames)
         {
+            if (fileNames is null) return;
             foreach (var fileName in fileNames)
             {
                 // TODO move to a service

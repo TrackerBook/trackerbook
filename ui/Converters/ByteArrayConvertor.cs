@@ -7,7 +7,7 @@ namespace bc_ui.Converters
     public static class ByteArrayConvertor
     {
         public static readonly IValueConverter ToBitmap =
-            new FuncValueConverter<byte[], Bitmap>(value =>
+            new FuncValueConverter<byte[], Bitmap?>(value =>
             {
                 if (value == null || value.Length == 0)
                 {

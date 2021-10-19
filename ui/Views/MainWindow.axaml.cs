@@ -1,8 +1,5 @@
-using System;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data.Converters;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using bc_ui.ViewModels;
@@ -27,28 +24,29 @@ namespace bc_ui.Views
 
         void SetupDnd()
         {
-            void DragOver(object sender, DragEventArgs e)
-            {
-                e.DragEffects = e.DragEffects & DragDropEffects.Link;
-
-                if (!e.Data.Contains(DataFormats.FileNames))
-                {
-                    e.DragEffects = DragDropEffects.None;
-                }
-            }
-
-            async void Drop(object sender, DragEventArgs e)
-            {
-                if (e.Data.Contains(DataFormats.FileNames))
-                {
-                    await ((MainWindowViewModel)this.DataContext).UploadFiles(e.Data.GetFileNames());
-                }
-            }
-
-
             AddHandler(DragDrop.DropEvent, Drop);
             AddHandler(DragDrop.DragOverEvent, DragOver);
         }
 
+        private async void Drop(object? sender, DragEventArgs e)
+        {
+            if (e is null) return;
+            if (this.DataContext is null) return;
+            if (e.Data is null) return;
+            if (e.Data.Contains(DataFormats.FileNames))
+            {
+                await ((MainWindowViewModel)this.DataContext).UploadFiles(e.Data.GetFileNames());
+            }
+        }
+
+        private void DragOver(object? sender, DragEventArgs e)
+        {
+            e.DragEffects = e.DragEffects & DragDropEffects.Link;
+
+            if (!e.Data.Contains(DataFormats.FileNames))
+            {
+                e.DragEffects = DragDropEffects.None;
+            }
+        }
     }
 }
