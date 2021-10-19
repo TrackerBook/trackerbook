@@ -251,12 +251,9 @@ namespace bcollection.infr
     using bcollection.domain;
     using FB2Library;
     using LiteDB;
-    //using UglyToad.PdfPig;
     using PDFiumCore;
     using SixLabors.ImageSharp;
     using SixLabors.ImageSharp.Formats.Jpeg;
-    using SixLabors.ImageSharp.Formats.Png;
-    using SixLabors.ImageSharp.PixelFormats;
     using SixLabors.ImageSharp.Processing;
 
     public class Storage : IStorage
@@ -352,7 +349,7 @@ namespace bcollection.infr
             return st.Delete(reference.id);
         });
 
-        public MetaFile? Get(ItemFileRef reference) => UsingDB<MetaFile>(st =>
+        public MetaFile? Get(ItemFileRef reference) => UsingDB<MetaFile?>(st =>
         {
             var file = st.FindById(reference.id);
             if (file is null)
@@ -794,7 +791,6 @@ namespace bcollection.infr
     {
         public string Create() => "$" + Guid.NewGuid().ToString("N");
     }
-
 
     public static class ImageProcessing
     {
