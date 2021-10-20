@@ -7,9 +7,26 @@ using System.Collections.Generic;
 
 namespace bcollection.domain
 {
-    public record ItemPath(string value);
-    public record ItemFileRef(string id);
-    public record CoverImage(ItemFileRef reference, string name, byte[] data);
+    public record ItemFileRef
+    {
+        public ItemFileRef(string id)
+        {
+            this.Id = id;
+        }
+        public string Id { get; set; }
+    }
+    public record CoverImage
+    {
+        public CoverImage(ItemFileRef reference, string name, byte[] data)
+        {
+            this.Reference =reference;
+            this.Name = name;
+            this.Data = data;
+        }
+        public ItemFileRef Reference { get; set; }
+        public string Name { get; set; }
+        public byte[] Data { get; set; }
+    }
     public record Item
     {
         public Item(string checksum, string name, string path, string extension, CoverImage coverImage,
@@ -117,7 +134,6 @@ namespace bcollection.infr
 namespace bcollection.app
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Security.Cryptography;
     using bcollection.domain;
@@ -159,7 +175,7 @@ namespace bcollection.app
                     if (existingItem.Deleted)
                     {
                         return UpdateItem(item with {
-                            CoverImage = item.CoverImage with { reference = existingItem.CoverImage.reference}});
+                            CoverImage = item.CoverImage with { Reference = existingItem.CoverImage.Reference}});
                     }
                     return new AlreadyExists(existingItem);
                 }
@@ -209,7 +225,7 @@ namespace bcollection.app
             {
                 if (x.CoverImage is not null)
                 {
-                    var coverImage = this.fileStorage.Get(x.CoverImage.reference);
+                    var coverImage = this.fileStorage.Get(x.CoverImage.Reference);
                     if (coverImage is not null)
                     {
                         return x with { CoverImage = coverImage};
@@ -263,7 +279,7 @@ namespace bcollection.infr
                     [tags] = new BsonArray(item.Tags.Select(x => new BsonValue(x))),
                     [read] = item.Read,
                     [deleted] = item.Deleted,
-                    [coverImage] = item.CoverImage.reference.id,
+                    [coverImage] = item.CoverImage.Reference.Id,
                     [created] = item.Created
                 },
                 deserialize: (bson) => new Item(
@@ -329,12 +345,12 @@ namespace bcollection.infr
         }
         public bool Delete(ItemFileRef reference) => UsingDB<bool>(st =>
         {
-            return st.Delete(reference.id);
+            return st.Delete(reference.Id);
         });
 
         public CoverImage? Get(ItemFileRef reference) => UsingDB<CoverImage?>(st =>
         {
-            var file = st.FindById(reference.id);
+            var file = st.FindById(reference.Id);
             if (file is null) return null;
             using var memory = new MemoryStream();
             file.CopyTo(memory);
@@ -344,19 +360,19 @@ namespace bcollection.infr
         public bool Add(CoverImage coverImage) => UsingDB<bool>(st =>
         {
             if (coverImage is null) return false;
-            var file = st.FindById(coverImage.reference.id);
+            var file = st.FindById(coverImage.Reference.Id);
             if (file is not null) return false;
-            using var memoryStream = new MemoryStream(coverImage.data);
-            st.Upload(coverImage.reference.id, coverImage.name, memoryStream);
+            using var memoryStream = new MemoryStream(coverImage.Data);
+            st.Upload(coverImage.Reference.Id, coverImage.Name, memoryStream);
             return true;
         });
 
         public bool Update(CoverImage coverImage) => UsingDB<bool>(st =>
         {
             if (coverImage is null) return false;
-            var file = st.FindById(coverImage.reference.id);
+            var file = st.FindById(coverImage.Reference.Id);
             if (file is null) return false;
-            using var memoryStream = new MemoryStream(coverImage.data);
+            using var memoryStream = new MemoryStream(coverImage.Data);
             using var targetStream = file.OpenWrite();
             memoryStream.CopyTo(targetStream);
             return true;

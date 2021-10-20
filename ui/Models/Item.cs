@@ -28,7 +28,7 @@ namespace bc_ui.Models
                 Name = item.Name,
                 Created = item.Created,
                 Path = item.Path,
-                Image = item.CoverImage.data,
+                Image = item.CoverImage.Data,
                 Checksum = item.Id
             };
         } 
