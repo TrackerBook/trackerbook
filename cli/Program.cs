@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using System.Text;
 using bcollection.app;
 using bcollection.domain;
@@ -21,11 +22,11 @@ namespace bcollection
                 .AddSingleton<IStorage, Storage>()
                 .AddSingleton<IFileStorage, FileStorage>()
                 .AddSingleton<IChecksumCreator, ChecksumCreator>()
-                .AddSingleton<IMetaExtractorFabric, MetaExtractorFabric>()
+                .AddSingleton<ICoverExtractorFabric, CoverExtractorFabric>()
                 .AddSingleton<IItemCreator, ItemCreator>()
                 .AddSingleton<IFileRefIdCreator, FileRefIdCreator>()
-                .AddSingleton<IMetaExtractor, Fb2MetaExtractor>()
-                .AddSingleton<IMetaExtractor, PdfMetaExtractor>()
+                .AddSingleton<ICoverExtractor, Fb2MetaExtractor>()
+                .AddSingleton<ICoverExtractor, PdfMetaExtractor>()
                 .BuildServiceProvider();
             Console.OutputEncoding = Encoding.UTF8;
 
@@ -34,32 +35,8 @@ namespace bcollection
                 CreateAddCommand(serviceProvider),
                 CreateListCommand(serviceProvider),
                 CreateDeleteCommand(serviceProvider),
-                CreateFindByChecksumCommand(serviceProvider),
                 CreateDeleteAllCommand(serviceProvider)
             }.InvokeAsync(args).Result;
-        }
-
-        private static Command CreateFindByChecksumCommand(ServiceProvider provider)
-        {
-            var findCommand = new Command(
-                                "find",
-                                "Find item by checksum prefix");
-            findCommand.AddArgument(new Argument<string>("prefix"));
-            findCommand.Handler = CommandHandler.Create<string>((prefix) =>
-            {
-                var bCollection = provider.GetRequiredService<IBCollection>();
-                var result = bCollection.Find(prefix);
-                var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
-                foreach (var item in result)
-                {
-                    logger.LogInformation(item.checksum.ToString());
-                    foreach (var meta in item.metadata)
-                    {
-                        logger.LogInformation(meta.ToString());
-                    }
-                }
-            });
-            return findCommand;
         }
 
         private static Command CreateDeleteCommand(ServiceProvider provider)
@@ -71,9 +48,11 @@ namespace bcollection
             deleteCommand.Handler = CommandHandler.Create<string>((checksum) =>
             {
                 var bCollection = provider.GetService<IBCollection>()!;
-                var result = bCollection.DeleteItem(checksum);
+                var item = bCollection.GetItems().SingleOrDefault(x => x.Id == checksum);
+                if (item is null) return;
+                var result = bCollection.UpdateItem(item with { Deleted = true });
                 var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
-                if (result is Deleted)
+                if (result is Updated)
                 {
                     logger.LogInformation("Deleted item.");
                 }
@@ -97,8 +76,8 @@ namespace bcollection
                 var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 foreach (var item in bCollection.GetItems())
                 {
-                    var result = bCollection.DeleteItem(item.checksum.value);
-                    if (result is Deleted)
+                    var result = bCollection.UpdateItem(item with { Deleted = true });
+                    if (result is Updated)
                     {
                         logger.LogInformation("Deleted item.");
                     }
@@ -123,7 +102,7 @@ namespace bcollection
                 var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 foreach (var item in bCollection.GetItems())
                 {
-                    logger.LogInformation(item.checksum.ToString());
+                    logger.LogInformation(item.Id.ToString());
                 }
             });
             return listCommand;
@@ -143,10 +122,10 @@ namespace bcollection
                 switch (result)
                 {
                     case Added addedResult:
-                        logger.LogInformation($"Added: {addedResult.item.checksum.value ?? "null"}");
+                        logger.LogInformation($"Added: {addedResult.item.Id ?? "null"}");
                         break;
                     case AlreadyExists alreadyExistsResult:
-                        logger.LogInformation($"Already exists: {alreadyExistsResult.item.checksum.value ?? "null"}");
+                        logger.LogInformation($"Already exists: {alreadyExistsResult.item.Id ?? "null"}");
                         break;
                 }
             });

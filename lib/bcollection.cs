@@ -1,24 +1,44 @@
-using System;
 
 #region Architecture
 //
 
+using System;
+using System.Collections.Generic;
+
 namespace bcollection.domain
 {
     public record ItemPath(string value);
-    public record Checksum(string value);
     public record ItemFileRef(string id);
-    public interface IMetaValue { }
-    public record MetaNumber(int value) : IMetaValue;
-    public record MetaString(string value) : IMetaValue;
-    public record MetaFile(ItemFileRef reference, string fileName, byte[]? value) : IMetaValue;
-    public record MetaDateTime(DateTime dateTime) : IMetaValue;
-    public record MetaData(string name, IMetaValue value);
-    public record Item(Checksum checksum, MetaData[] metadata);
+    public record CoverImage(ItemFileRef reference, string name, byte[] data);
+    public record Item
+    {
+        public Item(string checksum, string name, string path, string extension, CoverImage coverImage,
+            bool deleted, bool read, List<string> tags, DateTime created)
+        {
+            this.Id = checksum;
+            this.Name = name;
+            this.Path = path;
+            this.Extension = extension;
+            this.CoverImage = coverImage;
+            this.Deleted = deleted;
+            this.Read = read;
+            this.Tags = tags;
+            this.Created = created;
+        }
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Path { get; set; }
+        public string Extension { get; set; }
+        public CoverImage CoverImage { get; set; }
+        public bool Deleted { get; set; }
+        public bool Read { get; set; }
+        public List<string> Tags { get; set; }
+        public DateTime Created { get; set; }
+    }
     public interface Result { };
     public record Updated(Item item) : Result;
-    public record Deleted(Item item) : Result;
     public record Added(Item item) : Result;
+    public record NotFound(Item item) : Result;
     public record AlreadyExists(Item item) : Result;
     public record Error(string message) : Result;
 }
@@ -31,14 +51,11 @@ namespace bcollection.app
     {
         Item[] GetItems();
         Result AddItem(Item item);
-        Result AddMetadata(Item item, MetaData tag);
-        Result DeleteMetadata(Item item, MetaData tag);
-        Result DeleteItem(string checksum);
-        Item[] Find(string checksumPrefix);
+        Result UpdateItem(Item item);
     }
     public interface IChecksumCreator
     {
-        Checksum Create(byte[] data);
+        string Create(byte[] data);
     }
 }
 
@@ -57,9 +74,10 @@ namespace bcollection.infr
     }
     public interface IFileStorage
     {
-        bool Post(MetaFile itemFile);
+        bool Update(CoverImage coverImage);
+        bool Add(CoverImage coverImage);
         bool Delete(ItemFileRef reference);
-        MetaFile? Get(ItemFileRef reference);
+        CoverImage? Get(ItemFileRef reference);
 
     }
     public interface IItemCreator
@@ -67,23 +85,23 @@ namespace bcollection.infr
         Task<Item> Create(string path, byte[] data);
     }
 
-    public interface IMetaExtractorFabric
+    public interface ICoverExtractorFabric
     {
-        IMetaExtractor[] Create(string extension);
+        ICoverExtractor Create(string extension);
     }
 
-    public enum SupportedFileFormats
+    public enum SupportedFileFormat
     {
-        noop,
+        @default,
         fb2,
         pdf
     }
 
-    public interface IMetaExtractor
+    public interface ICoverExtractor
     {
-        SupportedFileFormats FileFormat { get; }
+        SupportedFileFormat FileFormat { get; }
 
-        Task<MetaData[]> Extract(byte[] data);
+        Task<byte[]> Extract(byte[] data);
     }
 
     public interface IFileRefIdCreator
@@ -108,12 +126,12 @@ namespace bcollection.app
 
     public class ChecksumCreator : IChecksumCreator
     {
-        public Checksum Create(byte[] data)
+        public string Create(byte[] data)
         {
             using var md5 = MD5.Create();
             var hash = md5.ComputeHash(data);
             var checksumValue = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-            return new Checksum(checksumValue);
+            return checksumValue;
         }
     }
 
@@ -132,107 +150,72 @@ namespace bcollection.app
 
         public Result AddItem(Item item)
         {
+            if (item.Id is null) return new Error("Checksum is null.");
             using (this.logger.BeginScope(nameof(AddItem)))
             {
-                var existingItem = this.storage.Get(item.checksum.value);
+                var existingItem = this.storage.Get(item.Id);
                 if (existingItem is not null)
                 {
+                    if (existingItem.Deleted)
+                    {
+                        return UpdateItem(item with {
+                            CoverImage = item.CoverImage with { reference = existingItem.CoverImage.reference}});
+                    }
                     return new AlreadyExists(existingItem);
                 }
                 if (!this.storage.Put(item))
                 {
                     return new Error("Can't add item.");
                 }
-                foreach (var fileMeta in item.metadata.Select(x => x.value).OfType<MetaFile>())
+                if (item.CoverImage is not null)
                 {
-                    if (!this.fileStorage.Post(fileMeta))
+                    if (!this.fileStorage.Add(item.CoverImage))
                     {
-                        return new Error("Can't upload file.");
+                        return new Error("Can't upload cover image.");
                     }
                 }
                 return new Added(item);
             }
         }
 
-        public Result AddMetadata(Item item, MetaData tag)
+        public Result UpdateItem(Item item)
         {
-            if (tag.value is MetaFile fileMeta && !this.fileStorage.Post(fileMeta))
+            if (item.Id is null) return new Error("Checksum is null.");
+            using (this.logger.BeginScope(nameof(UpdateItem)))
             {
-                return new Error("Can't upload file.");
-            }
-            var currentMeta = item.metadata;
-            var extendedMeta = new MetaData[currentMeta.Length + 1];
-            Array.Copy(currentMeta, extendedMeta, currentMeta.Length);
-            extendedMeta[extendedMeta.Length - 1] = tag;
-
-            return storage.Post(item with { metadata = extendedMeta })
-                ? new Updated(item)
-                : new Error("Can't add metadata.");
-        }
-
-        public Result DeleteItem(string checksum)
-        {
-            var item = this.storage.Get(checksum);
-            if (item is null)
-            {
-                return new Error("Can't find item with checksum.");
-            }
-            foreach (var fileMeta in item.metadata.Select(x => x.value).OfType<MetaFile>())
-            {
-                if (!this.fileStorage.Delete(fileMeta.reference))
+                var existingItem = this.storage.Get(item.Id);
+                if (existingItem is null)
                 {
-                    return new Error("Can't delete file.");
+                    return new NotFound(item);
                 }
-            }
-            return this.storage.Delete(item)
-                ? new Deleted(item)
-                : new Error("Can't delete item.");
-        }
-
-        public Result DeleteMetadata(Item item, MetaData meta)
-        {
-            if (meta.value is MetaFile fileMeta && !this.fileStorage.Post(fileMeta))
-            {
-                return new Error("Can't delete file.");
-            }
-            var currentMeta = item.metadata;
-            var reducedMeta = new MetaData[currentMeta.Length - 1];
-            var i = 0;
-            foreach (var tagCurrent in item.metadata)
-            {
-                if (tagCurrent != meta)
+                if (!this.storage.Post(item))
                 {
-                    reducedMeta[i++] = tagCurrent;
+                    return new Error("Can't update item.");
                 }
+                if (item.CoverImage is not null)
+                {
+                    if (!this.fileStorage.Update(item.CoverImage))
+                    {
+                        return new Error("Can't update cover image.");
+                    }
+                }
+                return new Updated(item);
             }
-            return storage.Post(item with { metadata = reducedMeta })
-                ? new Updated(item)
-                : new Error("Can't delete metadata.");
         }
-
-        public Item[] Find(string checksumPrefix) => this.storage.Find(checksumPrefix);
 
         public Item[] GetItems()
         {
             return storage.Get().Select(x =>
             {
-                var updatedMetaData = new List<MetaData>();
-                foreach (var currentMD in x.metadata)
+                if (x.CoverImage is not null)
                 {
-                    if (currentMD.value is MetaFile mf)
+                    var coverImage = this.fileStorage.Get(x.CoverImage.reference);
+                    if (coverImage is not null)
                     {
-                        var withData = this.fileStorage.Get(mf.reference);
-                        if (withData is not null)
-                        {
-                            updatedMetaData.Add(new MetaData(currentMD.name, withData));
-                        }
-                    }
-                    else
-                    {
-                        updatedMetaData.Add(currentMD);
+                        return x with { CoverImage = coverImage};
                     }
                 }
-                return new Item(x.checksum, updatedMetaData.ToArray());
+                return x;
             }).ToArray();
         }
     }
@@ -261,38 +244,38 @@ namespace bcollection.infr
         static Storage()
         {
             const string name = "name";
-            const string value = "value";
-            const string checksum = "checksum";
-            const string metadata = "metadata";
+            const string path = "path";
+            const string extension = "extension";
+            const string id = "_id";
+            const string tags = "tags";
+            const string read = "read";
+            const string deleted = "deleted";
+            const string coverImage = "coverImage";
+            const string created = "created";
             BsonMapper.Global.RegisterType<Item>
             (
                 serialize: (item) => new BsonDocument
                 {
-                    [checksum] = item.checksum.value,
-                    [metadata] = new BsonArray(item.metadata.Select(x => new BsonDocument
-                    {
-                        [name] = x.name,
-                        [value] = x.value switch
-                        {
-                            MetaString ms => ms.value,
-                            MetaDateTime md => md.dateTime,
-                            MetaNumber mn => mn.value,
-                            MetaFile mf => mf.reference.id,
-                            _ => throw new NotImplementedException()
-                        }
-                    }))
+                    [id] = item.Id,
+                    [name] = item.Name,
+                    [path] = item.Path,
+                    [extension] = item.Extension,
+                    [tags] = new BsonArray(item.Tags.Select(x => new BsonValue(x))),
+                    [read] = item.Read,
+                    [deleted] = item.Deleted,
+                    [coverImage] = item.CoverImage.reference.id,
+                    [created] = item.Created
                 },
                 deserialize: (bson) => new Item(
-                        new Checksum(bson[checksum]),
-                        bson[metadata].AsArray.Select(x => new MetaData(x[name], x[value] switch
-                        {
-                            _ when x[value].IsString && x[value].AsString.StartsWith("$") =>
-                                (IMetaValue)new MetaFile(new ItemFileRef(x[value].AsString), string.Empty, null),
-                            _ when x[value].IsString => (IMetaValue)new MetaString(x[value].AsString),
-                            _ when x[value].IsInt32 => (IMetaValue)new MetaNumber(x[value].AsInt32),
-                            _ when x[value].IsDateTime => (IMetaValue)new MetaDateTime(x[value].AsDateTime),
-                            _ => throw new NotImplementedException()
-                        })).ToArray())
+                        bson[id],
+                        bson[name].AsString,
+                        bson[path].AsString,
+                        bson[extension].AsString,
+                        new CoverImage(new ItemFileRef(bson[coverImage]), string.Empty, Array.Empty<byte>()),
+                        bson[deleted].AsBoolean,
+                        bson[read].AsBoolean,
+                        bson[tags].AsArray.Select(x => x.AsString).ToList(),
+                        bson[created].AsDateTime)
             );
         }
 
@@ -320,17 +303,17 @@ namespace bcollection.infr
 
         public Item? Get(string checksum) => UsingDB<Item?>(col =>
         {
-            return col.FindOne(Query.EQ("checksum", checksum));
+            return col.FindOne(Query.EQ("_id", checksum));
         });
 
         public bool Delete(Item item) => UsingDB(col =>
         {
-            return col.DeleteMany(Query.EQ("checksum", item.checksum.value)) > 0;
+            return col.DeleteMany(Query.EQ("_id", item.Id)) > 0;
         });
 
         public Item[] Find(string checksumPrefix) => UsingDB<Item[]>(col =>
         {
-            return col.Find(Query.StartsWith("checksum", checksumPrefix)).ToArray();
+            return col.Find(Query.StartsWith("_id", checksumPrefix)).ToArray();
         });
     }
 
@@ -349,35 +332,33 @@ namespace bcollection.infr
             return st.Delete(reference.id);
         });
 
-        public MetaFile? Get(ItemFileRef reference) => UsingDB<MetaFile?>(st =>
+        public CoverImage? Get(ItemFileRef reference) => UsingDB<CoverImage?>(st =>
         {
             var file = st.FindById(reference.id);
-            if (file is null)
-            {
-                return null;
-            }
+            if (file is null) return null;
             using var memory = new MemoryStream();
             file.CopyTo(memory);
-            return new MetaFile(reference, file.Filename, memory.ToArray());
+            return new CoverImage(reference, file.Filename, memory.ToArray());
         });
 
-        public bool Post(MetaFile itemFile) => UsingDB<bool>(st =>
+        public bool Add(CoverImage coverImage) => UsingDB<bool>(st =>
         {
-            if (itemFile.value is null)
-            {
-                return false;
-            }
-            var file = st.FindById(itemFile.reference.id);
-            using var memoryStream = new MemoryStream(itemFile.value);
-            if (file is null)
-            {
-                st.Upload(itemFile.reference.id, itemFile.fileName, memoryStream);
-            }
-            else
-            {
-                using var targetStream = file.OpenWrite();
-                memoryStream.CopyTo(targetStream);
-            }
+            if (coverImage is null) return false;
+            var file = st.FindById(coverImage.reference.id);
+            if (file is not null) return false;
+            using var memoryStream = new MemoryStream(coverImage.data);
+            st.Upload(coverImage.reference.id, coverImage.name, memoryStream);
+            return true;
+        });
+
+        public bool Update(CoverImage coverImage) => UsingDB<bool>(st =>
+        {
+            if (coverImage is null) return false;
+            var file = st.FindById(coverImage.reference.id);
+            if (file is null) return false;
+            using var memoryStream = new MemoryStream(coverImage.data);
+            using var targetStream = file.OpenWrite();
+            memoryStream.CopyTo(targetStream);
             return true;
         });
     }
@@ -388,12 +369,18 @@ namespace bcollection.infr
         private const string PathKey = "path";
         private const string CreatedDateKey = "createdDate";
         private const string ExtensionKey = "ext";
-        private readonly IMetaExtractorFabric metaExtractorFabric;
+        private readonly ICoverExtractorFabric coverExtractorFabric;
         private readonly IChecksumCreator checksumCreator;
-        public ItemCreator(IChecksumCreator checksumCreator, IMetaExtractorFabric metaExtractorFabric)
+        private readonly IFileRefIdCreator fileRefIdCreator;
+
+        public ItemCreator(
+            IChecksumCreator checksumCreator,
+            ICoverExtractorFabric coverExtractorFabric,
+            IFileRefIdCreator fileRefIdCreator)
         {
-            this.metaExtractorFabric = metaExtractorFabric;
+            this.coverExtractorFabric = coverExtractorFabric;
             this.checksumCreator = checksumCreator;
+            this.fileRefIdCreator = fileRefIdCreator;
         }
 
         public async Task<Item> Create(string path, byte[] data)
@@ -401,123 +388,56 @@ namespace bcollection.infr
             var name = Path.GetFileNameWithoutExtension(path);
             var checksum = this.checksumCreator.Create(data);
             var extension = Path.GetExtension(path);
-            
-            var tags = Array.Empty<MetaData>();
-            var metadata = new List<MetaData>
-            {
-                new MetaData(ExtensionKey, new MetaString(extension)),
-                new MetaData(NameKey, new MetaString(name)),
-                new MetaData(PathKey, new MetaString(path)),
-                new MetaData(CreatedDateKey, new MetaDateTime(DateTimeOffset.UtcNow.UtcDateTime)),
-            };
 
-            var metaExtractors = metaExtractorFabric.Create(extension);
-            foreach (var extractor in metaExtractors)
-            {
-                metadata.AddRange(await extractor.Extract(data));
-            }
-            return new Item(checksum, metadata.ToArray());
+            var coverExtractor = coverExtractorFabric.Create(extension);
+            var coverImageData = await coverExtractor.Extract(data); 
+            return new Item(checksum, name, path, extension, 
+                new CoverImage(new ItemFileRef(fileRefIdCreator.Create()), "cover.jpg", coverImageData),
+                false, false, Enumerable.Empty<string>().ToList(), DateTime.UtcNow);
         }
     }
 
-    public class MetaExtractorFabric : IMetaExtractorFabric
+    public class CoverExtractorFabric : ICoverExtractorFabric
     {
-        private readonly IEnumerable<IMetaExtractor> metaExtractors;
+        private readonly IEnumerable<ICoverExtractor> coverExtractors;
 
-        public MetaExtractorFabric(IEnumerable<IMetaExtractor> metaExtractors)
+        public CoverExtractorFabric(IEnumerable<ICoverExtractor> metaExtractors)
         {
-            this.metaExtractors = metaExtractors;
+            this.coverExtractors = metaExtractors;
         }
 
-        public IMetaExtractor[] Create(string extension) => this.metaExtractors
-            .Where(x => x.FileFormat == extension switch
+        public ICoverExtractor Create(string extension) => this.coverExtractors
+            .Single(x => x.FileFormat == extension switch
             {
-                ".fb2" => SupportedFileFormats.fb2,
-                ".pdf" => SupportedFileFormats.pdf,
-                _ => SupportedFileFormats.noop
-            }).ToArray();
+                ".fb2" => SupportedFileFormat.fb2,
+                ".pdf" => SupportedFileFormat.pdf,
+                _ => SupportedFileFormat.@default
+            });
     }
 
-    public class NoMetaExtractor : IMetaExtractor
+    public class DefaultCoverExtractor : ICoverExtractor
     {
-        public SupportedFileFormats FileFormat => SupportedFileFormats.noop;
+        public SupportedFileFormat FileFormat => SupportedFileFormat.@default;
 
-        public Task<MetaData[]> Extract(byte[] data) => Task.FromResult(Array.Empty<MetaData>());
+        public Task<byte[]> Extract(byte[] data) => Task.FromResult(Array.Empty<byte>());
     }
 
-    public class Fb2MetaExtractor : IMetaExtractor
+    public class Fb2MetaExtractor : ICoverExtractor
     {
-        private readonly IFileRefIdCreator fileRefIdCreator;
+        public SupportedFileFormat FileFormat => SupportedFileFormat.fb2;
 
-        public Fb2MetaExtractor(IFileRefIdCreator fileRefIdCreator)
-        {
-            this.fileRefIdCreator = fileRefIdCreator;
-        }
-
-        public SupportedFileFormats FileFormat => SupportedFileFormats.fb2;
-
-        public async Task<MetaData[]> Extract(byte[] data)
+        public async Task<byte[]> Extract(byte[] data)
         {
             using var stream = new MemoryStream(data);
             var fb2file = await ReadFB2FileStreamAsync(stream);
             var image = fb2file.TitleInfo?.Cover?.CoverpageImages.FirstOrDefault()?.HRef;
             var titleInfo = fb2file.TitleInfo;
-            if (titleInfo != null)
+            if (titleInfo != null && fb2file.Images.FirstOrDefault().Key == image?.Substring(1))
             {
-                var result = new List<MetaData>();
-                if (fb2file.Images.FirstOrDefault().Key == image?.Substring(1))
-                {
-                    var imageData = fb2file.Images.FirstOrDefault().Value.BinaryData;
-                    var key = fb2file.Images.FirstOrDefault().Key;
-                    result.Add(new MetaData(
-                        "cover",
-                        new MetaFile(
-                            new ItemFileRef(fileRefIdCreator.Create()),
-                            key,
-                            imageData)));
-                }
-                // check for null/empty values
-                var authors = titleInfo.BookAuthors.Select(x => x.ToString()).Aggregate((x, y) => x + ";" + y);
-                if (authors is not null)
-                {
-                    result.Add(new MetaData(
-                        "authors",
-                        new MetaString(authors)));
-                }
-                if (titleInfo.BookDate is not null && titleInfo.BookDate.DateValue != default)
-                {
-                    result.Add(new MetaData(
-                        "authors",
-                        new MetaDateTime(titleInfo.BookDate.DateValue)));
-                }
-                if (!string.IsNullOrWhiteSpace(titleInfo.BookTitle?.Text))
-                {
-                    result.Add(new MetaData(
-                        "title",
-                        new MetaString(titleInfo.BookTitle.Text)));
-                }
-                if (titleInfo.Genres is not null)
-                {
-                    result.Add(new MetaData(
-                        "genres",
-                        new MetaString(titleInfo.Genres.Select(x => x.Genre).Aggregate((x, y) => x + ";" + y))));
-                }
-                if (!string.IsNullOrWhiteSpace(titleInfo.Keywords?.Text))
-                {
-                    result.Add(new MetaData(
-                        "keywords",
-                        new MetaString(titleInfo.Keywords.Text)));
-                }
-                if (!string.IsNullOrWhiteSpace(titleInfo.Language))
-                {
-                    result.Add(new MetaData(
-                        "language",
-                        new MetaString(titleInfo.Language)));
-                }
-                return result.ToArray();
+                return fb2file.Images.FirstOrDefault().Value.BinaryData;
             }
-            
-            return Array.Empty<MetaData>();
+
+            return Array.Empty<byte>();
         }
 
         private async Task<FB2File> ReadFB2FileStreamAsync(Stream stream)
@@ -534,18 +454,11 @@ namespace bcollection.infr
         }
     }
 
-    public class PdfMetaExtractor : IMetaExtractor
+    public class PdfMetaExtractor : ICoverExtractor
     {
-        private readonly IFileRefIdCreator fileRefIdCreator;
+        public SupportedFileFormat FileFormat => SupportedFileFormat.pdf;
 
-        public PdfMetaExtractor(IFileRefIdCreator fileRefIdCreator)
-        {
-            this.fileRefIdCreator = fileRefIdCreator;
-        }
-
-        public SupportedFileFormats FileFormat => SupportedFileFormats.pdf;
-
-        public Task<MetaData[]> Extract(byte[] data)
+        public Task<byte[]> Extract(byte[] data)
         {
             IntPtr unmanagedPointer = IntPtr.Zero;
             try
@@ -605,14 +518,7 @@ namespace bcollection.infr
                 using var output = new MemoryStream();
                 img.Save(output, new JpegEncoder());
 
-                var result = new MetaData(
-                    "cover",
-                    new MetaFile(
-                        new ItemFileRef(fileRefIdCreator.Create()),
-                        "cover.png",
-                        ImageProcessing.Resize(output.ToArray())));
-
-                return Task.FromResult(new[] { result });
+                return Task.FromResult(ImageProcessing.Resize(output.ToArray()));
             }
             finally
             {

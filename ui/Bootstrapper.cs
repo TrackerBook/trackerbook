@@ -14,20 +14,17 @@ namespace bc_ui
             services.RegisterLazySingleton<IStorage>(() => new Storage());
             services.RegisterLazySingleton<IFileStorage>(() => new FileStorage());
             services.RegisterLazySingleton<IChecksumCreator>(() => new ChecksumCreator());
-            services.RegisterLazySingleton<IMetaExtractorFabric>(() => new MetaExtractorFabric(
-                resolver.GetServices<IMetaExtractor>()
+            services.RegisterLazySingleton<ICoverExtractorFabric>(() => new CoverExtractorFabric(
+                resolver.GetServices<ICoverExtractor>()
             ));
             services.RegisterLazySingleton<IItemCreator>(() => new ItemCreator(
                 resolver.GetRequiredService<IChecksumCreator>(),
-                resolver.GetRequiredService<IMetaExtractorFabric>()
+                resolver.GetRequiredService<ICoverExtractorFabric>(),
+                resolver.GetRequiredService<IFileRefIdCreator>()
             ));
             services.RegisterLazySingleton<IFileRefIdCreator>(() => new FileRefIdCreator());
-            services.RegisterLazySingleton<IMetaExtractor>(() => new Fb2MetaExtractor(
-                resolver.GetRequiredService<IFileRefIdCreator>()
-            ));
-            services.RegisterLazySingleton<IMetaExtractor>(() => new PdfMetaExtractor(
-                resolver.GetRequiredService<IFileRefIdCreator>()
-            ));
+            services.RegisterLazySingleton<ICoverExtractor>(() => new Fb2MetaExtractor());
+            services.RegisterLazySingleton<ICoverExtractor>(() => new PdfMetaExtractor());
             services.RegisterLazySingleton<IBCollection>(() => new BCollection(
                 new LoggerFactory(),
                 resolver.GetRequiredService<IStorage>(),

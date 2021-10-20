@@ -23,14 +23,13 @@ namespace bc_ui.Models
 
         public static UiItem Map(Item item)
         {
-            var dt = (item.metadata.FirstOrDefault(x => x.name == "createdDate")?.value as MetaDateTime)?.dateTime;
             return new UiItem
             {
-                Name = (item.metadata.FirstOrDefault(x => x.name == "name")?.value as MetaString)?.value ?? string.Empty,
-                Created = dt.HasValue ? dt.Value : DateTime.Now,
-                Path = (item.metadata.FirstOrDefault(x => x.name == "path")?.value as MetaString)?.value ?? string.Empty,
-                Image = (item.metadata.FirstOrDefault(x => x.name == "cover")?.value as MetaFile)?.value ?? Array.Empty<byte>(),
-                Checksum = item.checksum.value
+                Name = item.Name,
+                Created = item.Created,
+                Path = item.Path,
+                Image = item.CoverImage.data,
+                Checksum = item.Id
             };
         } 
     }

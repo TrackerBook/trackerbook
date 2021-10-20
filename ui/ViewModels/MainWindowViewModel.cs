@@ -22,7 +22,7 @@ namespace bc_ui.ViewModels
             Logger.Sink.Log(LogEventLevel.Information, nameof(MainWindowViewModel), "constructor", "init");
             this.bCollection = bCollection;
             this.itemCreator = itemCreator;
-            Items = new ObservableCollection<UiItem>(bCollection.GetItems().Select(x => UiItem.Map(x)));
+            Items = new ObservableCollection<UiItem>(bCollection.GetItems().Where(x => !x.Deleted).Select(x => UiItem.Map(x)));
         }
 
         private UiItem? selecteditem;
@@ -62,15 +62,24 @@ namespace bc_ui.ViewModels
 
         public void OnClickCommand(string checksum)
         {
-            var result = bCollection.DeleteItem(checksum);
-            if (result is Deleted deletedItem)
+            try
             {
-                var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
-                if (existingItem is not null)
+                var item = bCollection.GetItems().SingleOrDefault(x => x.Id == checksum);
+                if (item is null) return;
+                var result = bCollection.UpdateItem(item with {Deleted = true});
+                if (result is Updated deletedItem)
                 {
-                    Items.Remove(existingItem);
+                    var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
+                    if (existingItem is not null)
+                    {
+                        Items.Remove(existingItem);
+                    }
+                    NotificationMessage = $"Deleted '{ShortChecksum(deletedItem.item.Id)}'";
                 }
-                NotificationMessage = $"Deleted '{ShortChecksum(deletedItem.item.checksum.value)}'";
+            }
+            catch (Exception ex)
+            {
+                NotificationMessage = ex.Message;
             }
         }
 
@@ -88,13 +97,20 @@ namespace bc_ui.ViewModels
                 {
                     var itemToAdd = UiItem.Map(added.item);
                     Items.Add(itemToAdd);
-                    NotificationMessage = $"Added '{ShortChecksum(added.item.checksum.value)}'";
+                    NotificationMessage = $"Added '{ShortChecksum(added.item.Id)}'";
+                    SelectedItem = itemToAdd;
+                }
+                else if (result is Updated updated)
+                {
+                    var itemToAdd = UiItem.Map(updated.item);
+                    Items.Add(itemToAdd);
+                    NotificationMessage = $"Restore '{ShortChecksum(updated.item.Id)}'";
                     SelectedItem = itemToAdd;
                 }
                 else if (result is AlreadyExists existingItem)
                 {
-                    NotificationMessage = $"Already exists '{ShortChecksum(existingItem.item.checksum.value)}'";
-                    SelectedItem = Items.FirstOrDefault(x => x.Checksum == existingItem.item.checksum.value);
+                    NotificationMessage = $"Already exists '{ShortChecksum(existingItem.item.Id)}'";
+                    SelectedItem = Items.FirstOrDefault(x => x.Checksum == existingItem.item.Id);
                 }
             }
         }
