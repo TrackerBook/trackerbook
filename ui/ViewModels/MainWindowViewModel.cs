@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Avalonia.Interactivity;
 using Avalonia.Logging;
 using tb_ui.Models;
 using tb_lib.app;
@@ -17,16 +15,16 @@ namespace tb_ui.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        public MainWindowViewModel(IBCollection bCollection, IItemCreator itemCreator)
+        public MainWindowViewModel(IBCollection bCollection, IBookCreator itemCreator)
         {
             Logger.Sink.Log(LogEventLevel.Information, nameof(MainWindowViewModel), "constructor", "init");
             this.bCollection = bCollection;
             this.itemCreator = itemCreator;
-            Items = new ObservableCollection<UiItem>(bCollection.GetItems().Where(x => !x.Deleted).Select(x => UiItem.Map(x)));
+            Items = new ObservableCollection<UiBook>(bCollection.GetItems().Where(x => !x.Deleted).Select(x => UiBook.Map(x)));
         }
 
-        private UiItem? selecteditem;
-        public UiItem? SelectedItem
+        private UiBook? selecteditem;
+        public UiBook? SelectedItem
         {
             get => selecteditem;
             set => this.RaiseAndSetIfChanged(ref selecteditem, value);
@@ -79,12 +77,14 @@ namespace tb_ui.ViewModels
             }
             catch (Exception ex)
             {
-                NotificationMessage = ex.Message;
+                NotificationMessage = ex.StackTrace;
             }
         }
 
         public async Task UploadFiles(IEnumerable<string>? fileNames)
         {
+            try
+            {
             if (fileNames is null) return;
             foreach (var fileName in fileNames)
             {
@@ -95,14 +95,14 @@ namespace tb_ui.ViewModels
                 var result = bCollection.AddItem(item);
                 if (result is Added added)
                 {
-                    var itemToAdd = UiItem.Map(added.item);
+                    var itemToAdd = UiBook.Map(added.item);
                     Items.Add(itemToAdd);
                     NotificationMessage = $"Added '{ShortChecksum(added.item.Id)}'";
                     SelectedItem = itemToAdd;
                 }
                 else if (result is Updated updated)
                 {
-                    var itemToAdd = UiItem.Map(updated.item);
+                    var itemToAdd = UiBook.Map(updated.item);
                     Items.Add(itemToAdd);
                     NotificationMessage = $"Restore '{ShortChecksum(updated.item.Id)}'";
                     SelectedItem = itemToAdd;
@@ -113,11 +113,15 @@ namespace tb_ui.ViewModels
                     SelectedItem = Items.FirstOrDefault(x => x.Checksum == existingItem.item.Id);
                 }
             }
+            }catch (Exception ex)
+            {
+                NotificationMessage = ex.Message;
+            }
         }
 
         private readonly IBCollection bCollection;
-        private readonly IItemCreator itemCreator;
+        private readonly IBookCreator itemCreator;
 
-        public ObservableCollection<UiItem> Items { get; private set; }
+        public ObservableCollection<UiBook> Items { get; private set; }
     }
 }

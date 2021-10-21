@@ -23,9 +23,10 @@ namespace tb_cli
                 .AddSingleton<IFileStorage, FileStorage>()
                 .AddSingleton<IChecksumCreator, ChecksumCreator>()
                 .AddSingleton<ICoverExtractorFabric, CoverExtractorFabric>()
-                .AddSingleton<IItemCreator, ItemCreator>()
+                .AddSingleton<IBookCreator, BookCreator>()
                 .AddSingleton<IFileRefIdCreator, FileRefIdCreator>()
                 .AddSingleton<ICoverExtractor, Fb2MetaExtractor>()
+                .AddSingleton<ICoverExtractor, DefaultCoverExtractor>()
                 .AddSingleton<ICoverExtractor, PdfMetaExtractor>()
                 .BuildServiceProvider();
             Console.OutputEncoding = Encoding.UTF8;
@@ -115,7 +116,7 @@ namespace tb_cli
             addCommand.Handler = CommandHandler.Create<FileInfo>(async (fileInfo) =>
             {
                 var bCollection = provider.GetRequiredService<IBCollection>();
-                var itemCreator = provider.GetRequiredService<IItemCreator>();
+                var itemCreator = provider.GetRequiredService<IBookCreator>();
                 var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
                 var item = await itemCreator.Create(fileInfo.FullName, File.ReadAllBytes(fileInfo.FullName));
                 var result = bCollection.AddItem(item);

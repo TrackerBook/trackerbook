@@ -7,9 +7,9 @@ using System.Collections.Generic;
 
 namespace tb_lib.domain
 {
-    public record ItemFileRef
+    public record BookCoverRef
     {
-        public ItemFileRef(string id)
+        public BookCoverRef(string id)
         {
             this.Id = id;
         }
@@ -17,19 +17,19 @@ namespace tb_lib.domain
     }
     public record CoverImage
     {
-        public CoverImage(ItemFileRef reference, string name, byte[] data)
+        public CoverImage(BookCoverRef reference, string name, byte[] data)
         {
             this.Reference =reference;
             this.Name = name;
             this.Data = data;
         }
-        public ItemFileRef Reference { get; set; }
+        public BookCoverRef Reference { get; set; }
         public string Name { get; set; }
         public byte[] Data { get; set; }
     }
-    public record Item
+    public record Book
     {
-        public Item(string checksum, string name, string path, string extension, CoverImage coverImage,
+        public Book(string checksum, string name, string path, string extension, CoverImage coverImage,
             bool deleted, bool read, List<string> tags, DateTime created)
         {
             this.Id = checksum;
@@ -53,10 +53,10 @@ namespace tb_lib.domain
         public DateTime Created { get; set; }
     }
     public interface Result { };
-    public record Updated(Item item) : Result;
-    public record Added(Item item) : Result;
-    public record NotFound(Item item) : Result;
-    public record AlreadyExists(Item item) : Result;
+    public record Updated(Book item) : Result;
+    public record Added(Book item) : Result;
+    public record NotFound(Book item) : Result;
+    public record AlreadyExists(Book item) : Result;
     public record Error(string message) : Result;
 }
 
@@ -66,9 +66,9 @@ namespace tb_lib.app
 
     public interface IBCollection
     {
-        Item[] GetItems();
-        Result AddItem(Item item);
-        Result UpdateItem(Item item);
+        Book[] GetItems();
+        Result AddItem(Book item);
+        Result UpdateItem(Book item);
     }
     public interface IChecksumCreator
     {
@@ -82,24 +82,24 @@ namespace tb_lib.infr
     using tb_lib.domain;
     public interface IStorage
     {
-        Item? Get(string checksum);
-        Item[] Get();
-        bool Post(Item item);
-        bool Put(Item item);
-        bool Delete(Item item);
-        Item[] Find(string checksumPrefix);
+        Book? Get(string checksum);
+        Book[] Get();
+        bool Post(Book item);
+        bool Put(Book item);
+        bool Delete(Book item);
+        Book[] Find(string checksumPrefix);
     }
     public interface IFileStorage
     {
         bool Update(CoverImage coverImage);
         bool Add(CoverImage coverImage);
-        bool Delete(ItemFileRef reference);
-        CoverImage? Get(ItemFileRef reference);
+        bool Delete(BookCoverRef reference);
+        CoverImage? Get(BookCoverRef reference);
 
     }
-    public interface IItemCreator
+    public interface IBookCreator
     {
-        Task<Item> Create(string path, byte[] data);
+        Task<Book> Create(string path, byte[] data);
     }
 
     public interface ICoverExtractorFabric
@@ -164,7 +164,7 @@ namespace tb_lib.app
             this.fileStorage = fileStorage;
         }
 
-        public Result AddItem(Item item)
+        public Result AddItem(Book item)
         {
             if (item.Id is null) return new Error("Checksum is null.");
             using (this.logger.BeginScope(nameof(AddItem)))
@@ -194,7 +194,7 @@ namespace tb_lib.app
             }
         }
 
-        public Result UpdateItem(Item item)
+        public Result UpdateItem(Book item)
         {
             if (item.Id is null) return new Error("Checksum is null.");
             using (this.logger.BeginScope(nameof(UpdateItem)))
@@ -219,7 +219,7 @@ namespace tb_lib.app
             }
         }
 
-        public Item[] GetItems()
+        public Book[] GetItems()
         {
             return storage.Get().Select(x =>
             {
@@ -268,7 +268,7 @@ namespace tb_lib.infr
             const string deleted = "deleted";
             const string coverImage = "coverImage";
             const string created = "created";
-            BsonMapper.Global.RegisterType<Item>
+            BsonMapper.Global.RegisterType<Book>
             (
                 serialize: (item) => new BsonDocument
                 {
@@ -282,12 +282,12 @@ namespace tb_lib.infr
                     [coverImage] = item.CoverImage.Reference.Id,
                     [created] = item.Created
                 },
-                deserialize: (bson) => new Item(
+                deserialize: (bson) => new Book(
                         bson[id],
                         bson[name].AsString,
                         bson[path].AsString,
                         bson[extension].AsString,
-                        new CoverImage(new ItemFileRef(bson[coverImage]), string.Empty, Array.Empty<byte>()),
+                        new CoverImage(new BookCoverRef(bson[coverImage]), string.Empty, Array.Empty<byte>()),
                         bson[deleted].AsBoolean,
                         bson[read].AsBoolean,
                         bson[tags].AsArray.Select(x => x.AsString).ToList(),
@@ -295,39 +295,39 @@ namespace tb_lib.infr
             );
         }
 
-        private T UsingDB<T>(Func<ILiteCollection<Item>, T> lambda)
+        private T UsingDB<T>(Func<ILiteCollection<Book>, T> lambda)
         {
             using (var db = new LiteDatabase("track_books.db"))
             {
-                var col = db.GetCollection<Item>("items");
+                var col = db.GetCollection<Book>("books");
                 return lambda(col);
             }
         }
 
-        public Item[] Get() => UsingDB(col => col.Query().ToArray());
+        public Book[] Get() => UsingDB(col => col.Query().ToArray());
 
-        public bool Post(Item item) => UsingDB(col =>
+        public bool Post(Book item) => UsingDB(col =>
         {
             return col.Update(item);
         });
 
-        public bool Put(Item item) => UsingDB<bool>(col =>
+        public bool Put(Book item) => UsingDB<bool>(col =>
         {
             var result = col.Insert(item);
             return result is not null;
         });
 
-        public Item? Get(string checksum) => UsingDB<Item?>(col =>
+        public Book? Get(string checksum) => UsingDB<Book?>(col =>
         {
             return col.FindOne(Query.EQ("_id", checksum));
         });
 
-        public bool Delete(Item item) => UsingDB(col =>
+        public bool Delete(Book item) => UsingDB(col =>
         {
             return col.DeleteMany(Query.EQ("_id", item.Id)) > 0;
         });
 
-        public Item[] Find(string checksumPrefix) => UsingDB<Item[]>(col =>
+        public Book[] Find(string checksumPrefix) => UsingDB<Book[]>(col =>
         {
             return col.Find(Query.StartsWith("_id", checksumPrefix)).ToArray();
         });
@@ -343,12 +343,12 @@ namespace tb_lib.infr
                 return lambda(storage);
             }
         }
-        public bool Delete(ItemFileRef reference) => UsingDB<bool>(st =>
+        public bool Delete(BookCoverRef reference) => UsingDB<bool>(st =>
         {
             return st.Delete(reference.Id);
         });
 
-        public CoverImage? Get(ItemFileRef reference) => UsingDB<CoverImage?>(st =>
+        public CoverImage? Get(BookCoverRef reference) => UsingDB<CoverImage?>(st =>
         {
             var file = st.FindById(reference.Id);
             if (file is null) return null;
@@ -379,7 +379,7 @@ namespace tb_lib.infr
         });
     }
 
-    public class ItemCreator : IItemCreator
+    public class BookCreator : IBookCreator
     {
         private const string NameKey = "name";
         private const string PathKey = "path";
@@ -389,7 +389,7 @@ namespace tb_lib.infr
         private readonly IChecksumCreator checksumCreator;
         private readonly IFileRefIdCreator fileRefIdCreator;
 
-        public ItemCreator(
+        public BookCreator(
             IChecksumCreator checksumCreator,
             ICoverExtractorFabric coverExtractorFabric,
             IFileRefIdCreator fileRefIdCreator)
@@ -399,7 +399,7 @@ namespace tb_lib.infr
             this.fileRefIdCreator = fileRefIdCreator;
         }
 
-        public async Task<Item> Create(string path, byte[] data)
+        public async Task<Book> Create(string path, byte[] data)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             var checksum = this.checksumCreator.Create(data);
@@ -407,8 +407,9 @@ namespace tb_lib.infr
 
             var coverExtractor = coverExtractorFabric.Create(extension);
             var coverImageData = await coverExtractor.Extract(data); 
-            return new Item(checksum, name, path, extension, 
-                new CoverImage(new ItemFileRef(fileRefIdCreator.Create()), "cover.jpg", coverImageData),
+            var resizedImageDate = ImageProcessing.Resize(coverImageData);
+            return new Book(checksum, name, path, extension, 
+                new CoverImage(new BookCoverRef(fileRefIdCreator.Create()), "cover.jpg", resizedImageDate),
                 false, false, Enumerable.Empty<string>().ToList(), DateTime.UtcNow);
         }
     }
@@ -534,7 +535,7 @@ namespace tb_lib.infr
                 using var output = new MemoryStream();
                 img.Save(output, new JpegEncoder());
 
-                return Task.FromResult(ImageProcessing.Resize(output.ToArray()));
+                return Task.FromResult(output.ToArray());
             }
             finally
             {
@@ -718,6 +719,7 @@ namespace tb_lib.infr
     {
         public static byte[] Resize(byte[] imageBytes)
         {
+            if (imageBytes.Length == 0) return imageBytes;
             const int size = 100;
             using var memoryStream = new MemoryStream(imageBytes);
             using var image = SixLabors.ImageSharp.Image.Load(memoryStream);

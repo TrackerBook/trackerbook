@@ -6,7 +6,7 @@ using tb_lib.domain;
 
 namespace tb_ui.Models
 {
-    public class UiItem
+    public class UiBook
     {
         public string Checksum {get; set; } = string.Empty;
         public string Name { get; set;} = string.Empty;
@@ -21,9 +21,9 @@ namespace tb_ui.Models
             return Name;
         }
 
-        public static UiItem Map(Item item)
+        public static UiBook Map(Book item)
         {
-            return new UiItem
+            return new UiBook
             {
                 Name = item.Name,
                 Created = item.Created,

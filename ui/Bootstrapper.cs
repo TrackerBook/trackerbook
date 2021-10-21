@@ -17,7 +17,7 @@ namespace tb_ui
             services.RegisterLazySingleton<ICoverExtractorFabric>(() => new CoverExtractorFabric(
                 resolver.GetServices<ICoverExtractor>()
             ));
-            services.RegisterLazySingleton<IItemCreator>(() => new ItemCreator(
+            services.RegisterLazySingleton<IBookCreator>(() => new BookCreator(
                 resolver.GetRequiredService<IChecksumCreator>(),
                 resolver.GetRequiredService<ICoverExtractorFabric>(),
                 resolver.GetRequiredService<IFileRefIdCreator>()
@@ -25,6 +25,7 @@ namespace tb_ui
             services.RegisterLazySingleton<IFileRefIdCreator>(() => new FileRefIdCreator());
             services.RegisterLazySingleton<ICoverExtractor>(() => new Fb2MetaExtractor());
             services.RegisterLazySingleton<ICoverExtractor>(() => new PdfMetaExtractor());
+            services.RegisterLazySingleton<ICoverExtractor>(() => new DefaultCoverExtractor());
             services.RegisterLazySingleton<IBCollection>(() => new BCollection(
                 new LoggerFactory(),
                 resolver.GetRequiredService<IStorage>(),
@@ -32,7 +33,7 @@ namespace tb_ui
             ));
             services.Register<MainWindowViewModel>(() => new MainWindowViewModel(
                 resolver.GetRequiredService<IBCollection>(),
-                resolver.GetRequiredService<IItemCreator>()
+                resolver.GetRequiredService<IBookCreator>()
             ));
         }
 
