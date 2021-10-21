@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace bcollection.domain
+namespace tb_lib.domain
 {
     public record ItemFileRef
     {
@@ -60,9 +60,9 @@ namespace bcollection.domain
     public record Error(string message) : Result;
 }
 
-namespace bcollection.app
+namespace tb_lib.app
 {
-    using bcollection.domain;
+    using tb_lib.domain;
 
     public interface IBCollection
     {
@@ -76,10 +76,10 @@ namespace bcollection.app
     }
 }
 
-namespace bcollection.infr
+namespace tb_lib.infr
 {
     using System.Threading.Tasks;
-    using bcollection.domain;
+    using tb_lib.domain;
     public interface IStorage
     {
         Item? Get(string checksum);
@@ -131,13 +131,13 @@ namespace bcollection.infr
 
 #region Implementation
 
-namespace bcollection.app
+namespace tb_lib.app
 {
     using System;
     using System.Linq;
     using System.Security.Cryptography;
-    using bcollection.domain;
-    using bcollection.infr;
+    using tb_lib.domain;
+    using tb_lib.infr;
     using Microsoft.Extensions.Logging;
 
     public class ChecksumCreator : IChecksumCreator
@@ -237,7 +237,7 @@ namespace bcollection.app
     }
 }
 
-namespace bcollection.infr
+namespace tb_lib.infr
 {
     using System;
     using System.Collections.Generic;
@@ -246,8 +246,8 @@ namespace bcollection.infr
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Xml;
-    using bcollection.app;
-    using bcollection.domain;
+    using tb_lib.app;
+    using tb_lib.domain;
     using FB2Library;
     using LiteDB;
     using PDFiumCore;
@@ -297,7 +297,7 @@ namespace bcollection.infr
 
         private T UsingDB<T>(Func<ILiteCollection<Item>, T> lambda)
         {
-            using (var db = new LiteDatabase("bcollection.db"))
+            using (var db = new LiteDatabase("track_books.db"))
             {
                 var col = db.GetCollection<Item>("items");
                 return lambda(col);

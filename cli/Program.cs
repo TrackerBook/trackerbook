@@ -4,13 +4,13 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Text;
-using bcollection.app;
-using bcollection.domain;
-using bcollection.infr;
+using tb_lib.app;
+using tb_lib.domain;
+using tb_lib.infr;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace bcollection
+namespace tb_cli
 {
     class Program
     {

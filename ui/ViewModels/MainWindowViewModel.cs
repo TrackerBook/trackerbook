@@ -7,13 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Interactivity;
 using Avalonia.Logging;
-using bc_ui.Models;
-using bcollection.app;
-using bcollection.domain;
-using bcollection.infr;
+using tb_ui.Models;
+using tb_lib.app;
+using tb_lib.domain;
+using tb_lib.infr;
 using ReactiveUI;
 
-namespace bc_ui.ViewModels
+namespace tb_ui.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {

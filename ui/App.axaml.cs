@@ -1,11 +1,11 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using bc_ui.ViewModels;
-using bc_ui.Views;
+using tb_ui.ViewModels;
+using tb_ui.Views;
 using Splat;
 
-namespace bc_ui
+namespace tb_ui
 {
     public class App : Application
     {

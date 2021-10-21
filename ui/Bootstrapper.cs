@@ -1,11 +1,11 @@
 using System;
-using bc_ui.ViewModels;
-using bcollection.app;
-using bcollection.infr;
+using tb_ui.ViewModels;
+using tb_lib.app;
+using tb_lib.infr;
 using Microsoft.Extensions.Logging;
 using Splat;
 
-namespace bc_ui
+namespace tb_ui
 {
     public static class Bootstrapper
     {

@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace bc_ui.Converters
+namespace tb_ui.Converters
 {
     public static class DateTimeConvertor
     {

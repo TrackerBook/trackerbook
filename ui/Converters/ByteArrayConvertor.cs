@@ -2,7 +2,7 @@ using System.IO;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 
-namespace bc_ui.Converters
+namespace tb_ui.Converters
 {
     public static class ByteArrayConvertor
     {

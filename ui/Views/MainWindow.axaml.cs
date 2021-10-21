@@ -2,9 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using bc_ui.ViewModels;
+using tb_ui.ViewModels;
 
-namespace bc_ui.Views
+namespace tb_ui.Views
 {
     public partial class MainWindow : Window
     {

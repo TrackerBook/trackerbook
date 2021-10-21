@@ -6,7 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.ReactiveUI;
 using Splat;
 
-namespace bc_ui
+namespace tb_ui
 {
     class Program
     {

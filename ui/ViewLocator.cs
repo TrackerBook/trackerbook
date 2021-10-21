@@ -1,9 +1,9 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using bc_ui.ViewModels;
+using tb_ui.ViewModels;
 
-namespace bc_ui
+namespace tb_ui
 {
     public class ViewLocator : IDataTemplate
     {
