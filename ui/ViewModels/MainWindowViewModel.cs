@@ -77,7 +77,7 @@ namespace tb_ui.ViewModels
             }
             catch (Exception ex)
             {
-                NotificationMessage = ex.StackTrace;
+                NotificationMessage = ex.Message;
             }
         }
 
