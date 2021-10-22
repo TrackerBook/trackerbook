@@ -12,9 +12,13 @@ namespace tb_ui.Models
         public string Name { get; set;} = string.Empty;
         public string Path { get; set;} = string.Empty;
 
+        public char FirstLetter { get { return Name == string.Empty ? '-' : Name[0]; }}
+
         public DateTime Created { get; set; } = DateTime.Now;
 
         public byte[] Image { get; set; } = Array.Empty<byte>();
+
+        public bool NoImage { get { return Image.Length == 0; }}
 
         public override string ToString()
         {

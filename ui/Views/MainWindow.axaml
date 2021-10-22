@@ -44,7 +44,7 @@
                     MaterialOpacity="0.65" />
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
-        <Grid Margin="15,30,15,15">
+        <Grid Margin="15,35,15,15">
             <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
                 <TextBox CornerRadius="0,0,0,0" DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                     <!-- <TextBox.Styles>
@@ -63,7 +63,8 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid ColumnDefinitions="100, *, 120">
-                                <Image Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
+                                <Image IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
+                                <TextBlock IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
                                 <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
                                     <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
                                     <Grid ColumnDefinitions="80, *" DockPanel.Dock="Top" Margin="0,5,20,0">

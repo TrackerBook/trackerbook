@@ -77,7 +77,7 @@ namespace tb_ui.ViewModels
             }
             catch (Exception ex)
             {
-                NotificationMessage = ex.Message;
+                Logger.Sink.Log(LogEventLevel.Error, nameof(MainWindowViewModel), ex, ex.Message);
             }
         }
 
