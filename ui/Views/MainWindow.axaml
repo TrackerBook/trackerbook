@@ -54,8 +54,13 @@
                     </TextBox.Styles> -->
                 </TextBox>
                 <DockPanel DockPanel.Dock="Top" Height="30">
+                    <DockPanel.Styles>
+                        <Style Selector="ToggleSwitch#Finished:checked /template/ Border#SwitchKnobBounds">
+                            <Setter Property="Background" Value="Green"/>
+                        </Style>
+                    </DockPanel.Styles>
                     <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide deleted" OnContent="Show deleted" IsChecked="{Binding ShowDeleted}" Command="{Binding DeleteFinishedSwitched}" />
-                    <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding DeleteFinishedSwitched}"/>
+                    <ToggleSwitch Name="Finished" DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding DeleteFinishedSwitched}"/>
                 </DockPanel>
                 <!-- <TextBlock DockPanel.Dock="Top" Name="DropState" Text="{Binding FileNames}" /> -->
                 <ListBox Items="{Binding Items}" SelectedItem="{Binding SelectedItem}">
@@ -70,13 +75,19 @@
                                 <Image IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
                                 <TextBlock IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
                                 <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
+                                    <DockPanel.Styles>
+                                        <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+                                            <Setter Property="Background" Value="Green"/>
+                                        </Style>
+                                    </DockPanel.Styles>
                                     <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
                                     <Grid ColumnDefinitions="80, *" DockPanel.Dock="Top" Margin="0,5,20,0">
                                         <TextBlock Grid.Column="0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" FontSize="12"/>
                                         <TextBlock Grid.Column="1" Foreground="LightGray" HorizontalAlignment="Right" FontWeight="Light" Text="{Binding Checksum}" FontSize="12"/>
                                     </Grid>
                                     <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
-                                    <ToggleSwitch DockPanel.Dock="Left" OffContent="To read" OnContent="Finished" IsChecked="{Binding Finished}" CommandParameter="{Binding Checksum}" Command="{Binding DataContext.FinishBook, ElementName=MainWindow}" />
+                                    <ToggleSwitch DockPanel.Dock="Left" OffContent="To read" OnContent="Finished" IsChecked="{Binding Finished}" CommandParameter="{Binding Checksum}" Command="{Binding DataContext.FinishBook, ElementName=MainWindow}">
+                                    </ToggleSwitch>
                                     <!-- <Border Background="LightGreen" DockPanel.Dock="Top" CornerRadius="4" Padding="1" HorizontalAlignment="Stretch">
                                         <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
                                     </Border> -->
