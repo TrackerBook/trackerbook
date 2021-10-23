@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Logging;
 using Avalonia.ReactiveUI;
 using Splat;
 
@@ -23,6 +24,10 @@ namespace tb_ui
             {
                 Bootstrapper.Register(Locator.CurrentMutable, Locator.Current);
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            }
+            catch (Exception ex)
+            {
+                Logger.Sink.Log(LogEventLevel.Error, "track_books", ex, ex.ToString());
             }
             finally
             {

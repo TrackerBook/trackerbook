@@ -53,6 +53,10 @@
                         </Style>
                     </TextBox.Styles> -->
                 </TextBox>
+                <DockPanel DockPanel.Dock="Top" Height="30">
+                    <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide deleted" OnContent="Show deleted" IsChecked="{Binding ShowDeleted}" Command="{Binding DeleteFinishedSwitched}" />
+                    <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding DeleteFinishedSwitched}"/>
+                </DockPanel>
                 <!-- <TextBlock DockPanel.Dock="Top" Name="DropState" Text="{Binding FileNames}" /> -->
                 <ListBox Items="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                     <ListBox.Styles>
@@ -62,7 +66,7 @@
                     </ListBox.Styles>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid ColumnDefinitions="100, *, 120">
+                            <Grid ColumnDefinitions="100, *, 80, 80">
                                 <Image IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
                                 <TextBlock IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
                                 <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
@@ -72,18 +76,20 @@
                                         <TextBlock Grid.Column="1" Foreground="LightGray" HorizontalAlignment="Right" FontWeight="Light" Text="{Binding Checksum}" FontSize="12"/>
                                     </Grid>
                                     <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
+                                    <ToggleSwitch DockPanel.Dock="Left" OffContent="To read" OnContent="Finished" IsChecked="{Binding Finished}" CommandParameter="{Binding Checksum}" Command="{Binding DataContext.FinishBook, ElementName=MainWindow}" />
                                     <!-- <Border Background="LightGreen" DockPanel.Dock="Top" CornerRadius="4" Padding="1" HorizontalAlignment="Stretch">
                                         <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
                                     </Border> -->
                                 </DockPanel>
-                                <Button Command="{Binding DataContext.OnClickCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="2" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="100" Margin="0,0,20,0" Content="Delete"></Button>
+                                <Button IsVisible="{Binding !Deleted}" Command="{Binding DataContext.OnDeleteCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="3" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="80" Margin="0,0,20,0" Content="Delete"></Button>
+                                <Button IsVisible="{Binding Deleted}" Command="{Binding DataContext.OnRestoreCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="3" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="80" Margin="0,0,20,0" Content="Restore"></Button>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
             </DockPanel>
         </Grid>
-        <Border Margin="5,5,5,5" IsVisible="{Binding IsPopupVisible}" Width="250" Height="75" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+        <Border Margin="5,5,5,5" IsVisible="{Binding IsPopupVisible}" Width="250" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Right">
             <Border Background="#7f000000">
                 <Panel>
                     <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5,5,5,5" Foreground="White" TextWrapping="Wrap" Text="{Binding NotificationMessage}" MaxWidth="300" />

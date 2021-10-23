@@ -1,7 +1,4 @@
 using System;
-using System.Drawing;
-using System.IO;
-using System.Linq;
 using tb_lib.domain;
 
 namespace tb_ui.Models
@@ -11,6 +8,8 @@ namespace tb_ui.Models
         public string Checksum {get; set; } = string.Empty;
         public string Name { get; set;} = string.Empty;
         public string Path { get; set;} = string.Empty;
+        public bool Deleted { get; set; } = false;
+        public bool Finished { get; set; } = false;
 
         public char FirstLetter { get { return Name == string.Empty ? '-' : Name[0]; }}
 
@@ -33,7 +32,9 @@ namespace tb_ui.Models
                 Created = item.Created,
                 Path = item.Path,
                 Image = item.CoverImage.Data,
-                Checksum = item.Id
+                Checksum = item.Id,
+                Deleted = item.Deleted,
+                Finished = item.Read,
             };
         } 
     }

@@ -337,7 +337,7 @@ namespace tb_lib.infr
     {
         private T UsingDB<T>(Func<ILiteStorage<string>, T> lambda)
         {
-            using (var db = new LiteDatabase("bcollection.db"))
+            using (var db = new LiteDatabase("track_books.db"))
             {
                 var storage = db.FileStorage;
                 return lambda(storage);
