@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using tb_lib.domain;
 
 namespace tb_ui.Models
@@ -18,6 +19,18 @@ namespace tb_ui.Models
         public byte[] Image { get; set; } = Array.Empty<byte>();
 
         public bool NoImage { get { return Image.Length == 0; }}
+
+        public List<string> Tags { get; } = new List<string>
+        {
+            "new",
+            "fantazy",
+            "programming",
+            "csharp",
+            "updated",
+            "upcoming",
+            "tested",
+            "morning"
+        };
 
         public override string ToString()
         {

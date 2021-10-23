@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:tb_ui.ViewModels"
+        xmlns:views="clr-namespace:tb_ui.Views"
         xmlns:sys="using:System"
         xmlns:local="clr-namespace:tb_ui.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -71,7 +72,7 @@
                     </ListBox.Styles>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid ColumnDefinitions="100, *, 80, 80">
+                            <Grid ColumnDefinitions="100, *, 160, 80">
                                 <Image IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
                                 <TextBlock IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
                                 <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
@@ -86,14 +87,31 @@
                                         <TextBlock Grid.Column="1" Foreground="LightGray" HorizontalAlignment="Right" FontWeight="Light" Text="{Binding Checksum}" FontSize="12"/>
                                     </Grid>
                                     <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
-                                    <ToggleSwitch DockPanel.Dock="Left" OffContent="To read" OnContent="Finished" IsChecked="{Binding Finished}" CommandParameter="{Binding Checksum}" Command="{Binding DataContext.FinishBook, ElementName=MainWindow}">
+                                    <DockPanel DockPanel.Dock="Top">
+                                        <ToggleSwitch DockPanel.Dock="Left" OffContent="Not finished" OnContent="Finished" IsChecked="{Binding Finished}" CommandParameter="{Binding Checksum}" Command="{Binding DataContext.FinishBook, ElementName=MainWindow}">
+
                                     </ToggleSwitch>
+                                    </DockPanel>
                                     <!-- <Border Background="LightGreen" DockPanel.Dock="Top" CornerRadius="4" Padding="1" HorizontalAlignment="Stretch">
                                         <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
                                     </Border> -->
                                 </DockPanel>
-                                <Button IsVisible="{Binding !Deleted}" Command="{Binding DataContext.OnDeleteCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="3" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="80" Margin="0,0,20,0" Content="Delete"></Button>
-                                <Button IsVisible="{Binding Deleted}" Command="{Binding DataContext.OnRestoreCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" Grid.Column="3" HorizontalContentAlignment="Center" VerticalAlignment="Top" Width="80" Margin="0,0,20,0" Content="Restore"></Button>
+                                <ScrollViewer Grid.Column="2" MaxHeight="100" Padding="0,0,5,0">
+                                    <ItemsRepeater Items="{Binding Tags}">
+                                        <ItemsRepeater.Layout>
+                                            <WrapLayout VerticalSpacing="3" HorizontalSpacing="3"/>
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate>
+                                                <views:Tag HorizontalAlignment="Left" />
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </ScrollViewer>
+                                <DockPanel Grid.Column="3">
+                                    <Button DockPanel.Dock="Top" IsVisible="{Binding !Deleted}" Command="{Binding DataContext.OnDeleteCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Margin="0,0,20,0" Content="Delete"></Button>
+                                    <Button DockPanel.Dock="Top" IsVisible="{Binding Deleted}" Command="{Binding DataContext.OnRestoreCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Margin="0,0,20,0" Content="Restore"></Button>
+                                </DockPanel>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
