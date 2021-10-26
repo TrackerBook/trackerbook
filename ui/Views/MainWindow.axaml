@@ -9,31 +9,29 @@
         mc:Ignorable="d"
         x:Class="tb_ui.Views.MainWindow"
         ExtendClientAreaToDecorationsHint="True"
-        
         WindowStartupLocation="CenterScreen"
         Icon="{x:Null}"
         Name="MainWindow"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         Title="Track Books">
- <!--  -->
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <NativeMenu.Menu>
-        <NativeMenu>
-            <NativeMenuItem Header="File"></NativeMenuItem>
-        </NativeMenu>
-    </NativeMenu.Menu>
-
-    <!-- <Window.Resources>
-        <Bitmap x:key="test">/Assets/test.png</Bitmap>
-    </Window.Resources> -->
-
-    <!-- <Window.Resources>
-        <converters:DateTimeConvertor x:Key="dateTimeToDate"/>
-    </Window.Resources> -->
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="CornerRadius" Value="0,0,0,0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="ToggleSwitch#Finished:checked /template/ Border#SwitchKnobBounds">
+            <Setter Property="Background" Value="Green"/>
+        </Style>
+        <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+            <Setter Property="Background" Value="Green"/>
+        </Style>
+    </Window.Styles>
 
     <Panel>
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
@@ -47,7 +45,7 @@
         </ExperimentalAcrylicBorder>
         <Grid Margin="15,35,15,15">
             <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
-                <TextBox CornerRadius="0,0,0,0" DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox">
                     <!-- <TextBox.Styles>
                         <Style Selector="TextBox">
                             <Setter Property="CornerRadius" Value="0" />
@@ -55,16 +53,11 @@
                     </TextBox.Styles> -->
                 </TextBox>
                 <DockPanel DockPanel.Dock="Top" Height="30">
-                    <DockPanel.Styles>
-                        <Style Selector="ToggleSwitch#Finished:checked /template/ Border#SwitchKnobBounds">
-                            <Setter Property="Background" Value="Green"/>
-                        </Style>
-                    </DockPanel.Styles>
                     <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide deleted" OnContent="Show deleted" IsChecked="{Binding ShowDeleted}" Command="{Binding DeleteFinishedSwitched}" />
                     <ToggleSwitch Name="Finished" DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding DeleteFinishedSwitched}"/>
                 </DockPanel>
                 <!-- <TextBlock DockPanel.Dock="Top" Name="DropState" Text="{Binding FileNames}" /> -->
-                <ListBox Items="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+                <ListBox Name="Books" Items="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                     <ListBox.Styles>
                         <Style Selector="ListBoxItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -72,30 +65,27 @@
                     </ListBox.Styles>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid ColumnDefinitions="100, *, 160, 80">
+                            <Grid ColumnDefinitions="100, *, 200">
                                 <Image IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
                                 <TextBlock IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
-                                <DockPanel Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch">
-                                    <DockPanel.Styles>
-                                        <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
-                                            <Setter Property="Background" Value="Green"/>
-                                        </Style>
-                                    </DockPanel.Styles>
-                                    <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
-                                    <Grid ColumnDefinitions="80, *" DockPanel.Dock="Top" Margin="0,5,20,0">
-                                        <TextBlock Grid.Column="0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" FontSize="12"/>
-                                        <TextBlock Grid.Column="1" Foreground="LightGray" HorizontalAlignment="Right" FontWeight="Light" Text="{Binding Checksum}" FontSize="12"/>
-                                    </Grid>
-                                    <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
-                                    <DockPanel DockPanel.Dock="Top">
-                                        <ToggleSwitch DockPanel.Dock="Left" OffContent="Not finished" OnContent="Finished" IsChecked="{Binding Finished}" CommandParameter="{Binding Checksum}" Command="{Binding DataContext.FinishBook, ElementName=MainWindow}">
-
-                                    </ToggleSwitch>
+                                <Border Padding="5,0,5,0" Grid.Column="1">
+                                    <DockPanel HorizontalAlignment="Stretch" >
+                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
+                                        <Grid ColumnDefinitions="80, *" DockPanel.Dock="Top" Margin="0,5,20,0">
+                                            <TextBlock Grid.Column="0" FontWeight="Light" Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}" FontSize="12"/>
+                                            <TextBlock Grid.Column="1" Foreground="LightGray" HorizontalAlignment="Right" FontWeight="Light" Text="{Binding Checksum}" FontSize="12"/>
+                                        </Grid>
+                                        <TextBlock Margin="0,5,0,0" Text="{Binding Path}" DockPanel.Dock="Top"/>
+                                        <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Stretch">
+                                            <ToggleSwitch DockPanel.Dock="Left" OffContent="Not finished" OnContent="Finished" IsChecked="{Binding Finished}" CommandParameter="{Binding Checksum}" Command="{Binding DataContext.FinishBook, ElementName=MainWindow}" />
+                                            <Panel DockPanel.Dock="Left" Margin="10,0,0,0">
+                                                <Button IsVisible="{Binding !Deleted}" Command="{Binding DataContext.OnDeleteCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Delete"></Button>
+                                                <Button IsVisible="{Binding Deleted}" Command="{Binding DataContext.OnRestoreCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Restore"></Button>
+                                            </Panel>
+                                            <Button HorizontalAlignment="Right" DockPanel.Dock="Right" Command="{Binding DataContext.OnAddTag, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Add Tag"></Button>
+                                        </DockPanel>
                                     </DockPanel>
-                                    <!-- <Border Background="LightGreen" DockPanel.Dock="Top" CornerRadius="4" Padding="1" HorizontalAlignment="Stretch">
-                                        <TextBlock Text="{Binding Created, Converter={x:Static local:DateTimeConvertor.ToDateString}}"/>
-                                    </Border> -->
-                                </DockPanel>
+                                </Border>
                                 <ScrollViewer Grid.Column="2" MaxHeight="100" Padding="0,0,5,0">
                                     <ItemsRepeater Items="{Binding Tags}">
                                         <ItemsRepeater.Layout>
@@ -103,15 +93,53 @@
                                         </ItemsRepeater.Layout>
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate>
-                                                <views:Tag HorizontalAlignment="Left" />
+                                                <Panel>
+                                                    <Panel.Styles>
+                                                        <Style Selector="Border">
+                                                            <Setter Property="CornerRadius" Value="3,0,0,3"/>
+                                                            <Setter Property="Background" Value="White"/>
+                                                            <Setter Property="Padding" Value="4"/>
+                                                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                        <Setter Property="Height" Value="25"/>
+                                                        </Style>
+                                                            <Style Selector="TextBlock">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                                        </Style>
+                                                        <Style Selector="Button">
+                                                            <!-- <Setter Property="Height" Value="12"/> -->
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                                            <!-- <Setter Property="FontSize" Value="10"/> -->
+                                                            <Setter Property="Padding" Value="0,0,0,0"/>
+                                                            <Setter Property="Height" Value="25"/>
+                                                            <Setter Property="CornerRadius" Value="0,3,3,0"/>
+                                                            <Setter Property="Background" Value="White"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                        </Style>
+                                                        <Style Selector="Button:pointerover">
+                                                            <Setter Property="Background" Value="Black"/>
+                                                        </Style>
+                                                    </Panel.Styles>
+                                                    <DockPanel>
+                                                        <Border DockPanel.Dock="Left">
+                                                            <TextBlock Text="{Binding}" />
+                                                        </Border>
+                                                        <Button DockPanel.Dock="Left" Content="✖️" Command="{Binding DataContext.OnTagDelete, ElementName=MainWindow}">
+                                                            <Button.CommandParameter>
+                                                                <MultiBinding>
+                                                                    <Binding Path="$parent[Grid].DataContext.Checksum"/>
+                                                                    <Binding Path="." />
+                                                                </MultiBinding>
+                                                            </Button.CommandParameter>
+                                                        </Button>
+                                                    </DockPanel>
+                                                </Panel>
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>
                                 </ScrollViewer>
-                                <DockPanel Grid.Column="3">
-                                    <Button DockPanel.Dock="Top" IsVisible="{Binding !Deleted}" Command="{Binding DataContext.OnDeleteCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Margin="0,0,20,0" Content="Delete"></Button>
-                                    <Button DockPanel.Dock="Top" IsVisible="{Binding Deleted}" Command="{Binding DataContext.OnRestoreCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Margin="0,0,20,0" Content="Restore"></Button>
-                                </DockPanel>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -125,6 +153,21 @@
                     <Button Background="Black" Foreground="White" Command="{Binding OnNotificationCloseCommand}" VerticalAlignment="Top" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalContentAlignment="Center" Content="✖️" Height="30" Width="30" FontSize="12" Padding="0,0,0,0"/>
                 </Panel>
             </Border>
+        </Border>
+        <Border Margin="5,5,5,5" Background="#7f000000" IsVisible="{Binding ShowAddTagWindow}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <DockPanel VerticalAlignment="Center" HorizontalAlignment="Center" Background="#2B2B2B">
+                <DockPanel.Styles>
+                    <Style Selector="Button">
+                        <Setter Property="BorderBrush" Value="#99ffffff"/>
+                        <Setter Property="Height" Value="32"/>
+                        <Setter Property="CornerRadius" Value="0,0,0,0"/>
+                    </Style>
+                </DockPanel.Styles>
+                <TextBox DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}">
+                </TextBox>
+                <Button HotKey="Enter" DockPanel.Dock="Left" BorderThickness="0,1,1,1" Command="{Binding OnAddTagClick}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Add" />
+                <Button HotKey="Escape" DockPanel.Dock="Right" BorderThickness="0,1,1,1" Background="Black" Foreground="White" Command="{Binding OnAddTagWindowClose}" VerticalAlignment="Top" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalContentAlignment="Center" Content="✖️" Width="32" FontSize="12" Padding="0,0,0,0"/>
+            </DockPanel>
         </Border>
     </Panel>
 </Window>

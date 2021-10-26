@@ -78,6 +78,29 @@ namespace tb_ui.ViewModels
             }
         }
 
+        private bool showAddTagWindow = false;
+
+        public bool ShowAddTagWindow
+        {
+            get => showAddTagWindow;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref showAddTagWindow, value);
+            }
+        }
+
+        private string addTagChecksum = string.Empty;
+        private string newTag = string.Empty;
+
+        public string NewTag
+        {
+            get => newTag;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref newTag, value);
+            }
+        }
+
         private string ShortChecksum(string checksum) => checksum.Substring(0, 8);
 
         public void FinishBook(string checksum)
@@ -152,6 +175,66 @@ namespace tb_ui.ViewModels
             {
                 NotificationMessage = $"Error '{ShortChecksum(error.message)}'";
             }
+        }
+
+        public void OnAddTag(string checksum)
+        {
+            ShowAddTagWindow = true;
+            addTagChecksum = checksum;
+        }
+
+        public void OnAddTagClick()
+        {
+            ShowAddTagWindow = false;
+            var book = bCollection.GetItems().SingleOrDefault(x => x.Id == addTagChecksum);
+            if (book is null) return;
+            book.Tags.Add(NewTag);
+            var result = bCollection.UpdateItem(book);
+            if (result is Updated updated)
+            {
+                var uiBook = Items.SingleOrDefault(x => x.Checksum == updated.item.Id);
+                if (uiBook is null) return;
+                var index = Items.IndexOf(uiBook);
+                uiBook.Tags.Add(NewTag);
+                Items.RemoveAt(index);
+                Items.Insert(index, uiBook);
+                NewTag = string.Empty;
+            }
+            else if (result is Error error)
+            {
+                NotificationMessage = error.message;
+            }
+        }
+
+        public void OnTagDelete(IReadOnlyCollection<object> values)
+        {
+            var checksum = values.First().ToString();
+            var tagValue = values.Skip(1).First().ToString()!;
+            var book = bCollection.GetItems().FirstOrDefault(x => x.Id == checksum);
+            if (book is null) return;
+            book.Tags.Remove(tagValue);
+            var result = bCollection.UpdateItem(book);
+            if (result is Updated updated)
+            {
+                var uiBook = Items.SingleOrDefault(x => x.Checksum == updated.item.Id);
+                if (uiBook is null) return;
+                var index = Items.IndexOf(uiBook);
+                uiBook.Tags.Remove(tagValue);
+                Items.RemoveAt(index);
+                Items.Insert(index, uiBook);
+                NotificationMessage = $"Updated {ShortChecksum(updated.item.Id)}";  
+            }
+            else if (result is Error error)
+            {
+                NotificationMessage = $"Error {error.message}";
+            }
+        }
+
+        public void OnAddTagWindowClose()
+        {
+            ShowAddTagWindow = false;
+            addTagChecksum = string.Empty;
+            NewTag = string.Empty;
         }
 
         private List<UiBook> GetBooksToDisplay() =>
