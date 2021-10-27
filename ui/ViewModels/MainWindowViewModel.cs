@@ -21,7 +21,7 @@ namespace tb_ui.ViewModels
             this.bCollection = bCollection;
             this.itemCreator = itemCreator;
             Items = new ObservableCollection<UiBook>(GetBooksToDisplay());
-            ExistingTags = GetAllTags();
+            ExistingTags = new ObservableCollection<string>(GetAllTags());
         }
 
         private UiBook? selecteditem;
@@ -58,13 +58,7 @@ namespace tb_ui.ViewModels
             }
         }
 
-        public List<string> existingTags = new List<string>();
-
-        public List<string> ExistingTags
-        {
-            get => existingTags;
-            set => this.RaiseAndSetIfChanged(ref existingTags, value);
-        }
+        public ObservableCollection<string> ExistingTags { get; set;}
 
         public void OnNotificationCloseCommand()
         {
@@ -218,8 +212,6 @@ namespace tb_ui.ViewModels
                 if (!ExistingTags.Contains(NewTag))
                 {
                     ExistingTags.Add(NewTag);
-                    var updatedExistingTags = new List<string>(ExistingTags);
-                    ExistingTags = updatedExistingTags;
                 }
                 NewTag = string.Empty;
             }
@@ -251,9 +243,6 @@ namespace tb_ui.ViewModels
                 if (ExistingTags.Contains(tagValue))
                 {
                     ExistingTags.Remove(tagValue);
-                    // TODO: how to rebind without creating a new list
-                    var updatedExistingTags = new List<string>(ExistingTags);
-                    ExistingTags = updatedExistingTags;
                 }
                 NotificationMessage = $"Updated {ShortChecksum(updated.item.Id)}";  
             }
