@@ -21,6 +21,7 @@ namespace tb_ui.ViewModels
             this.bCollection = bCollection;
             this.itemCreator = itemCreator;
             Items = new ObservableCollection<UiBook>(GetBooksToDisplay());
+            ExistingTags = GetAllTags();
         }
 
         private UiBook? selecteditem;
@@ -55,6 +56,14 @@ namespace tb_ui.ViewModels
                     this.RaisePropertyChanged(nameof(IsPopupVisible));
                 });
             }
+        }
+
+        public List<string> existingTags = new List<string>();
+
+        public List<string> ExistingTags
+        {
+            get => existingTags;
+            set => this.RaiseAndSetIfChanged(ref existingTags, value);
         }
 
         public void OnNotificationCloseCommand()
@@ -194,16 +203,24 @@ namespace tb_ui.ViewModels
             ShowAddTagWindow = false;
             var book = bCollection.GetItems().SingleOrDefault(x => x.Id == addTagChecksum);
             if (book is null) return;
+            if (book.Tags.Contains(NewTag)) return;
             book.Tags.Add(NewTag);
             var result = bCollection.UpdateItem(book);
             if (result is Updated updated)
             {
                 var uiBook = Items.SingleOrDefault(x => x.Checksum == updated.item.Id);
                 if (uiBook is null) return;
-                var index = Items.IndexOf(uiBook);
+                if (uiBook.Tags.Contains(NewTag)) return;
                 uiBook.Tags.Add(NewTag);
+                var index = Items.IndexOf(uiBook);
                 Items.RemoveAt(index);
                 Items.Insert(index, uiBook);
+                if (!ExistingTags.Contains(NewTag))
+                {
+                    ExistingTags.Add(NewTag);
+                    var updatedExistingTags = new List<string>(ExistingTags);
+                    ExistingTags = updatedExistingTags;
+                }
                 NewTag = string.Empty;
             }
             else if (result is Error error)
@@ -219,16 +236,25 @@ namespace tb_ui.ViewModels
             var tagValue = values.Skip(1).First().ToString()!;
             var book = bCollection.GetItems().FirstOrDefault(x => x.Id == checksum);
             if (book is null) return;
+            if (!book.Tags.Contains(tagValue)) return;
             book.Tags.Remove(tagValue);
             var result = bCollection.UpdateItem(book);
             if (result is Updated updated)
             {
                 var uiBook = Items.SingleOrDefault(x => x.Checksum == updated.item.Id);
                 if (uiBook is null) return;
-                var index = Items.IndexOf(uiBook);
+                if (!uiBook.Tags.Contains(tagValue)) return;
                 uiBook.Tags.Remove(tagValue);
+                var index = Items.IndexOf(uiBook);
                 Items.RemoveAt(index);
                 Items.Insert(index, uiBook);
+                if (ExistingTags.Contains(tagValue))
+                {
+                    ExistingTags.Remove(tagValue);
+                    // TODO: how to rebind without creating a new list
+                    var updatedExistingTags = new List<string>(ExistingTags);
+                    ExistingTags = updatedExistingTags;
+                }
                 NotificationMessage = $"Updated {ShortChecksum(updated.item.Id)}";  
             }
             else if (result is Error error)
@@ -243,6 +269,9 @@ namespace tb_ui.ViewModels
             addTagChecksum = string.Empty;
             NewTag = string.Empty;
         }
+
+        private List<string> GetAllTags() =>
+            bCollection.GetItems().SelectMany(x => x.Tags).Distinct().ToList();
 
         private List<UiBook> GetBooksToDisplay() =>
             bCollection.GetItems()

@@ -25,6 +25,11 @@
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
         </Style>
+        <Style Selector="AutoCompleteBox">
+            <Setter Property="CornerRadius" Value="0,0,0,0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
         <Style Selector="ToggleSwitch#Finished:checked /template/ Border#SwitchKnobBounds">
             <Setter Property="Background" Value="Green"/>
         </Style>
@@ -155,7 +160,8 @@
                         <Setter Property="CornerRadius" Value="0,0,0,0"/>
                     </Style>
                 </DockPanel.Styles>
-                <TextBox DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}" />
+                <AutoCompleteBox Items="{Binding ExistingTags}" DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}" />
+                <!-- <TextBox DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}" /> -->
                 <Button HotKey="Enter" DockPanel.Dock="Left" BorderThickness="0,1,1,1" Command="{Binding OnAddTagClick}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Add" />
                 <Button HotKey="Escape" DockPanel.Dock="Right" BorderThickness="0,1,1,1" Background="Black" Foreground="White" Command="{Binding OnAddTagWindowClose}" VerticalAlignment="Top" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalContentAlignment="Center" Content="✖️" Width="32" FontSize="12" Padding="0,0,0,0"/>
             </DockPanel>
