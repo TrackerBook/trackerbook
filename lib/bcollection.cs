@@ -219,6 +219,7 @@ namespace tb_lib.app
             }
         }
 
+        // TODO add paging with max = 100 books
         public Book[] GetItems()
         {
             return storage.Get().Select(x =>

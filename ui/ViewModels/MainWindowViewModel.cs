@@ -41,6 +41,7 @@ namespace tb_ui.ViewModels
 
         private string notificationMessage = string.Empty;
 
+        private const int notificationMessageHideDelay = 3000;
         public string NotificationMessage
         {
             get => notificationMessage;
@@ -48,6 +49,11 @@ namespace tb_ui.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref notificationMessage, value);
                 this.RaisePropertyChanged(nameof(IsPopupVisible));
+                Task.Delay(notificationMessageHideDelay).ContinueWith(x =>
+                {
+                    notificationMessage = string.Empty;
+                    this.RaisePropertyChanged(nameof(IsPopupVisible));
+                });
             }
         }
 
@@ -208,6 +214,7 @@ namespace tb_ui.ViewModels
 
         public void OnTagDelete(IReadOnlyCollection<object> values)
         {
+            // TODO: pass argument without collection
             var checksum = values.First().ToString();
             var tagValue = values.Skip(1).First().ToString()!;
             var book = bCollection.GetItems().FirstOrDefault(x => x.Id == checksum);

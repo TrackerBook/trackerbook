@@ -45,18 +45,11 @@
         </ExperimentalAcrylicBorder>
         <Grid Margin="15,35,15,15">
             <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
-                <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox">
-                    <!-- <TextBox.Styles>
-                        <Style Selector="TextBox">
-                            <Setter Property="CornerRadius" Value="0" />
-                        </Style>
-                    </TextBox.Styles> -->
-                </TextBox>
+                <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox" />
                 <DockPanel DockPanel.Dock="Top" Height="30">
                     <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide deleted" OnContent="Show deleted" IsChecked="{Binding ShowDeleted}" Command="{Binding DeleteFinishedSwitched}" />
                     <ToggleSwitch Name="Finished" DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding DeleteFinishedSwitched}"/>
                 </DockPanel>
-                <!-- <TextBlock DockPanel.Dock="Top" Name="DropState" Text="{Binding FileNames}" /> -->
                 <ListBox Name="Books" Items="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                     <ListBox.Styles>
                         <Style Selector="ListBoxItem">
@@ -93,6 +86,7 @@
                                         </ItemsRepeater.Layout>
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate>
+                                                <!-- TODO: Move to a separate user control -->
                                                 <Panel>
                                                     <Panel.Styles>
                                                         <Style Selector="Border">
@@ -108,10 +102,8 @@
                                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                                         </Style>
                                                         <Style Selector="Button">
-                                                            <!-- <Setter Property="Height" Value="12"/> -->
                                                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                                             <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                                            <!-- <Setter Property="FontSize" Value="10"/> -->
                                                             <Setter Property="Padding" Value="0,0,0,0"/>
                                                             <Setter Property="Height" Value="25"/>
                                                             <Setter Property="CornerRadius" Value="0,3,3,0"/>
@@ -163,8 +155,7 @@
                         <Setter Property="CornerRadius" Value="0,0,0,0"/>
                     </Style>
                 </DockPanel.Styles>
-                <TextBox DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}">
-                </TextBox>
+                <TextBox DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}" />
                 <Button HotKey="Enter" DockPanel.Dock="Left" BorderThickness="0,1,1,1" Command="{Binding OnAddTagClick}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Add" />
                 <Button HotKey="Escape" DockPanel.Dock="Right" BorderThickness="0,1,1,1" Background="Black" Foreground="White" Command="{Binding OnAddTagWindowClose}" VerticalAlignment="Top" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalContentAlignment="Center" Content="✖️" Width="32" FontSize="12" Padding="0,0,0,0"/>
             </DockPanel>
