@@ -1,8 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
+using tb_ui.Models;
 using tb_ui.ViewModels;
 
 namespace tb_ui.Views
@@ -55,6 +57,19 @@ namespace tb_ui.Views
             if (e is null) return;
             if (this.DataContext is null) return;
             ((MainWindowViewModel)this.DataContext).UpdateDisplayedBooks();
+        }
+        public void OnAddTagClick(object s, RoutedEventArgs e)
+        {
+            if (s is null) return;
+            var btn  = (Button)s;
+            if (this.DataContext is null) return;
+            if (btn.DataContext is null) return;
+            var checksum = ((UiBook)btn.DataContext).Checksum;
+            var autoComplete = this.FindControl<AutoCompleteBox>("NewTagName");
+            if (!autoComplete.IsFocused) autoComplete.Focus();
+            Logger.Sink.Log(LogEventLevel.Information, nameof(OnAddTagClick), "OnAddTagClick", "" + autoComplete.IsFocused);
+            ((MainWindowViewModel)this.DataContext).OnAddTag(checksum);
+            Logger.Sink.Log(LogEventLevel.Information, nameof(OnAddTagClick), "OnAddTagClick", "" + autoComplete.IsFocused);
         }
     }
 }

@@ -82,7 +82,7 @@
                                                 <Button IsVisible="{Binding !Deleted}" Command="{Binding DataContext.OnDeleteCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Delete"></Button>
                                                 <Button IsVisible="{Binding Deleted}" Command="{Binding DataContext.OnRestoreCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Restore"></Button>
                                             </Panel>
-                                            <Button HorizontalAlignment="Right" DockPanel.Dock="Right" Command="{Binding DataContext.OnAddTag, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Add Tag"></Button>
+                                            <Button HorizontalAlignment="Right" Click="OnAddTagClick" DockPanel.Dock="Right" HorizontalContentAlignment="Center" Width="80" Content="Add Tag"></Button>
                                         </DockPanel>
                                     </DockPanel>
                                 </Border>
@@ -162,8 +162,7 @@
                         <Setter Property="CornerRadius" Value="0,0,0,0"/>
                     </Style>
                 </DockPanel.Styles>
-                <AutoCompleteBox Items="{Binding ExistingTags}" DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}" />
-                <!-- <TextBox DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}" /> -->
+                <AutoCompleteBox Name="NewTagName" Items="{Binding ExistingTags}" DockPanel.Dock="Left" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Text="{Binding NewTag}" />
                 <Button HotKey="Enter" DockPanel.Dock="Left" BorderThickness="0,1,1,1" Command="{Binding OnAddTagClick}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Add" />
                 <Button HotKey="Escape" DockPanel.Dock="Right" BorderThickness="0,1,1,1" Background="Black" Foreground="White" Command="{Binding OnAddTagWindowClose}" VerticalAlignment="Top" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalContentAlignment="Center" Content="✖️" Width="32" FontSize="12" Padding="0,0,0,0"/>
             </DockPanel>
