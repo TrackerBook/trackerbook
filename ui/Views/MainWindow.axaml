@@ -12,6 +12,8 @@
         WindowStartupLocation="CenterScreen"
         Icon="{x:Null}"
         Name="MainWindow"
+        MinWidth="650"
+        MinHeight="200"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         Title="Track Books">
@@ -50,10 +52,10 @@
         </ExperimentalAcrylicBorder>
         <Grid Margin="15,35,15,15">
             <DockPanel DragDrop.AllowDrop="True" LastChildFill="True" Margin="0,0,0,0">
-                <TextBox DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox" />
+                <TextBox KeyUp="SearchTextInput" DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox" />
                 <DockPanel DockPanel.Dock="Top" Height="30">
-                    <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide deleted" OnContent="Show deleted" IsChecked="{Binding ShowDeleted}" Command="{Binding DeleteFinishedSwitched}" />
-                    <ToggleSwitch Name="Finished" DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding DeleteFinishedSwitched}"/>
+                    <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide deleted" OnContent="Show deleted" IsChecked="{Binding ShowDeleted}" Command="{Binding UpdateDisplayedBooks}" />
+                    <ToggleSwitch Name="Finished" DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding UpdateDisplayedBooks}"/>
                 </DockPanel>
                 <ListBox Name="Books" Items="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                     <ListBox.Styles>
@@ -63,10 +65,10 @@
                     </ListBox.Styles>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid ColumnDefinitions="100, *, 200">
+                            <Grid ColumnDefinitions="100, *, 150" MinWidth="300">
                                 <Image IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
                                 <TextBlock IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
-                                <Border Padding="5,0,5,0" Grid.Column="1">
+                                <Border Padding="5,0,5,0" Grid.Column="1" MinWidth="350">
                                     <DockPanel HorizontalAlignment="Stretch" >
                                         <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
                                         <Grid ColumnDefinitions="80, *" DockPanel.Dock="Top" Margin="0,5,20,0">

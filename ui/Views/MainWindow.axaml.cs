@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
 using tb_ui.ViewModels;
 
@@ -47,6 +48,13 @@ namespace tb_ui.Views
             {
                 e.DragEffects = DragDropEffects.None;
             }
+        }
+
+        public void SearchTextInput(object s, KeyEventArgs e)
+        {
+            if (e is null) return;
+            if (this.DataContext is null) return;
+            ((MainWindowViewModel)this.DataContext).UpdateDisplayedBooks();
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -10,6 +9,7 @@ using tb_lib.app;
 using tb_lib.domain;
 using tb_lib.infr;
 using ReactiveUI;
+using System;
 
 namespace tb_ui.ViewModels
 {
@@ -58,7 +58,7 @@ namespace tb_ui.ViewModels
             }
         }
 
-        public ObservableCollection<string> ExistingTags { get; set;}
+        public ObservableCollection<string> ExistingTags { get; set; }
 
         public void OnNotificationCloseCommand()
         {
@@ -118,7 +118,7 @@ namespace tb_ui.ViewModels
             if (uiBook == null) return;
             var item = bCollection.GetItems().SingleOrDefault(x => x.Id == checksum);
             if (item is null) return;
-            var result = bCollection.UpdateItem(item with {Read = uiBook.Finished});
+            var result = bCollection.UpdateItem(item with { Read = uiBook.Finished });
             if (result is Updated updatedItem)
             {
                 NotificationMessage = $"Updated '{ShortChecksum(updatedItem.item.Id)}'";
@@ -133,7 +133,7 @@ namespace tb_ui.ViewModels
         {
             var item = bCollection.GetItems().SingleOrDefault(x => x.Id == checksum);
             if (item is null) return;
-            var result = bCollection.UpdateItem(item with {Deleted = true});
+            var result = bCollection.UpdateItem(item with { Deleted = true });
             if (result is Updated deletedItem)
             {
                 var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
@@ -163,7 +163,7 @@ namespace tb_ui.ViewModels
         {
             var item = bCollection.GetItems().SingleOrDefault(x => x.Id == checksum);
             if (item is null) return;
-            var result = bCollection.UpdateItem(item with {Deleted = false});
+            var result = bCollection.UpdateItem(item with { Deleted = false });
             if (result is Updated restoredItem)
             {
                 var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
@@ -244,7 +244,7 @@ namespace tb_ui.ViewModels
                 {
                     ExistingTags.Remove(tagValue);
                 }
-                NotificationMessage = $"Updated {ShortChecksum(updated.item.Id)}";  
+                NotificationMessage = $"Updated {ShortChecksum(updated.item.Id)}";
             }
             else if (result is Error error)
             {
@@ -260,27 +260,32 @@ namespace tb_ui.ViewModels
         }
 
         private List<string> GetAllTags() =>
+            // TODO move to bCollection
             bCollection.GetItems().SelectMany(x => x.Tags).Distinct().ToList();
 
         private List<UiBook> GetBooksToDisplay() =>
             bCollection.GetItems()
                 .Where(x => showDeleted || !x.Deleted)
                 .Where(x => showFinished || !x.Read)
+                .Where(x => SearchText.Length < 3
+                    || x.Tags.Any(t => t.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase))
+                        || x.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase))
                 .Select(x => UiBook.Map(x)).ToList();
 
-        public void DeleteFinishedSwitched()
+        public void UpdateDisplayedBooks()
         {
             var previousSelected = SelectedItem;
             SelectedItem = null;
-            var toDisplay = GetBooksToDisplay();
-            var toDelete = Items.Where(y => toDisplay.All(x => x.Checksum != y.Checksum)).ToList();
-            foreach (var book in toDisplay.Where(y => !Items.Any(x => x.Checksum == y.Checksum)))
+            var filtered = GetBooksToDisplay();
+            var toAdd = filtered.Where(x => Items.All(i => i.Checksum != x.Checksum)).ToList();
+            var toDelete = Items.Where(x => filtered.All(f => f.Checksum != x.Checksum)).ToList();
+            foreach (var item in toDelete)
             {
-                Items.Add(book);
+                Items.Remove(item);
             }
-            foreach (var book in toDelete)
+            foreach (var item in toAdd)
             {
-                Items.Remove(book);
+                Items.Add(item);
             }
             if (previousSelected != null && Items.Any(x => x.Checksum == previousSelected.Checksum))
             {
@@ -296,7 +301,7 @@ namespace tb_ui.ViewModels
                 // TODO move to a service
                 var data = await File.ReadAllBytesAsync(fileName);
                 var item = await itemCreator.Create(fileName, data);
-                
+
                 var result = bCollection.AddItem(item);
                 if (result is Added added)
                 {
