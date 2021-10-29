@@ -206,9 +206,9 @@ namespace tb_ui.ViewModels
                 if (uiBook is null) return;
                 if (uiBook.Tags.Contains(NewTag)) return;
                 uiBook.Tags.Add(NewTag);
-                var index = Items.IndexOf(uiBook);
-                Items.RemoveAt(index);
-                Items.Insert(index, uiBook);
+                // var index = Items.IndexOf(uiBook);
+                // Items.RemoveAt(index);
+                // Items.Insert(index, uiBook);
                 if (!ExistingTags.Contains(NewTag))
                 {
                     ExistingTags.Add(NewTag);
@@ -238,8 +238,9 @@ namespace tb_ui.ViewModels
                 if (!uiBook.Tags.Contains(tagValue)) return;
                 uiBook.Tags.Remove(tagValue);
                 var index = Items.IndexOf(uiBook);
-                Items.RemoveAt(index);
-                Items.Insert(index, uiBook);
+                // Items.RemoveAt(index);
+                // Items.Insert(index, uiBook);
+                // this.RaisePropertyChanged(nameof(Items));
                 if (ExistingTags.Contains(tagValue))
                 {
                     ExistingTags.Remove(tagValue);

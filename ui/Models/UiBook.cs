@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using tb_lib.domain;
 
 namespace tb_ui.Models
@@ -20,7 +20,7 @@ namespace tb_ui.Models
 
         public bool NoImage { get { return Image.Length == 0; }}
 
-        public List<string> Tags { get; set; } = new List<string>();
+        public ObservableCollection<string> Tags { get; set; } = new ObservableCollection<string>();
 
         public override string ToString()
         {
@@ -38,7 +38,7 @@ namespace tb_ui.Models
                 Checksum = item.Id,
                 Deleted = item.Deleted,
                 Finished = item.Read,
-                Tags = item.Tags
+                Tags = new ObservableCollection<string>(item.Tags)
             };
         } 
     }
