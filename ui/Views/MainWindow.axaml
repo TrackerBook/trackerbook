@@ -65,10 +65,16 @@
                     </ListBox.Styles>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid ColumnDefinitions="100, *, 150" MinWidth="300">
-                                <Image IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
-                                <TextBlock IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
-                                <Border Padding="5,0,5,0" Grid.Column="1" MinWidth="350">
+                            <Grid MinWidth="300">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="*" MinWidth="350" />
+                                    <ColumnDefinition Width="5" />
+                                    <ColumnDefinition Width="150" MinWidth="50" />
+                                </Grid.ColumnDefinitions>
+                                <Image ZIndex="1" IsVisible="{Binding !NoImage}" Source="{Binding Image, Converter={x:Static local:ByteArrayConvertor.ToBitmap}}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
+                                <TextBlock ZIndex="1" IsVisible="{Binding NoImage}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60" Text="{Binding FirstLetter}" />
+                                <Border ZIndex="0" Padding="5,0,5,0" Grid.Column="1" MinWidth="350">
                                     <DockPanel HorizontalAlignment="Stretch" >
                                         <TextBlock Text="{Binding Name}" FontWeight="Medium" DockPanel.Dock="Top" FontSize="20"/>
                                         <Grid ColumnDefinitions="80, *" DockPanel.Dock="Top" Margin="0,5,20,0">
@@ -86,7 +92,8 @@
                                         </DockPanel>
                                     </DockPanel>
                                 </Border>
-                                <ScrollViewer Grid.Column="2" MaxHeight="100" Padding="0,0,5,0">
+                                <GridSplitter Background="Transparent" Width="5" Grid.Row="0" Grid.Column="2"/>
+                                <ScrollViewer Grid.Column="3" MaxHeight="100" Padding="0,0,5,0">
                                     <ItemsRepeater Items="{Binding Tags}">
                                         <ItemsRepeater.Layout>
                                             <WrapLayout VerticalSpacing="3" HorizontalSpacing="3"/>
