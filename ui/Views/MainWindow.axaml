@@ -6,6 +6,8 @@
         xmlns:local="clr-namespace:tb_ui.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+        xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
         mc:Ignorable="d"
         x:Class="tb_ui.Views.MainWindow"
         ExtendClientAreaToDecorationsHint="True"
@@ -88,7 +90,13 @@
                                                 <Button IsVisible="{Binding !Deleted}" Command="{Binding DataContext.OnDeleteCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Delete"></Button>
                                                 <Button IsVisible="{Binding Deleted}" Command="{Binding DataContext.OnRestoreCommand, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" HorizontalContentAlignment="Center" Width="80" Content="Restore"></Button>
                                             </Panel>
-                                            <Button HorizontalAlignment="Right" Click="OnAddTagClick" DockPanel.Dock="Right" HorizontalContentAlignment="Center" Width="80" Content="Add Tag"></Button>
+                                            <Button HorizontalAlignment="Right" Command="{Binding DataContext.OnAddTag, ElementName=MainWindow}" CommandParameter="{Binding Checksum}" DockPanel.Dock="Right" HorizontalContentAlignment="Center" Width="80" Content="Add Tag">
+                                                <i:Interaction.Behaviors>
+                                                    <ia:EventTriggerBehavior EventName="Click">
+                                                        <ia:CallMethodAction TargetObject="{Binding #NewTagName}" MethodName="Focus"/>
+                                                    </ia:EventTriggerBehavior>
+                                                </i:Interaction.Behaviors>
+                                            </Button>
                                         </DockPanel>
                                     </DockPanel>
                                 </Border>

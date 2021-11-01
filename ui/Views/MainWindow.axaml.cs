@@ -58,18 +58,5 @@ namespace tb_ui.Views
             if (this.DataContext is null) return;
             ((MainWindowViewModel)this.DataContext).UpdateDisplayedBooks();
         }
-        public void OnAddTagClick(object s, RoutedEventArgs e)
-        {
-            if (s is null) return;
-            var btn  = (Button)s;
-            if (this.DataContext is null) return;
-            if (btn.DataContext is null) return;
-            var checksum = ((UiBook)btn.DataContext).Checksum;
-            var autoComplete = this.FindControl<AutoCompleteBox>("NewTagName");
-            if (!autoComplete.IsFocused) autoComplete.Focus();
-            Logger.Sink.Log(LogEventLevel.Information, nameof(OnAddTagClick), "OnAddTagClick", "" + autoComplete.IsFocused);
-            ((MainWindowViewModel)this.DataContext).OnAddTag(checksum);
-            Logger.Sink.Log(LogEventLevel.Information, nameof(OnAddTagClick), "OnAddTagClick", "" + autoComplete.IsFocused);
-        }
     }
 }
