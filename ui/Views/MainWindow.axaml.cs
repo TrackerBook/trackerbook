@@ -2,9 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
-using tb_ui.Models;
 using tb_ui.ViewModels;
 
 namespace tb_ui.Views
@@ -52,11 +50,26 @@ namespace tb_ui.Views
             }
         }
 
-        public void SearchTextInput(object s, KeyEventArgs e)
+        private void SearchTextInput(object s, KeyEventArgs e)
         {
             if (e is null) return;
             if (this.DataContext is null) return;
             ((MainWindowViewModel)this.DataContext).UpdateDisplayedBooks();
+        }
+
+        private async void OnFilesUpload(object s, RoutedEventArgs args)
+        {
+            if (this.DataContext is null) return;
+            var dialog = new OpenFileDialog();
+            dialog.Filters.Add(new FileDialogFilter { Name = "Books", Extensions = { "fb2", "pdf", "djvu", "epub" } });
+            dialog.AllowMultiple = true;
+
+            var result = await dialog.ShowAsync(this);
+
+            if (result != null)
+            {
+                await ((MainWindowViewModel)this.DataContext).UploadFiles(result);
+            }
         }
     }
 }
