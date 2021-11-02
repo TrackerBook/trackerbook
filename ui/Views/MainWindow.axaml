@@ -12,7 +12,7 @@
         x:Class="tb_ui.Views.MainWindow"
         ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
-        Icon="{x:Null}"
+        Icon="/Assets/books.ico"
         Name="MainWindow"
         MinWidth="650"
         MinHeight="200"
