@@ -13,7 +13,7 @@ namespace tb_lib.domain
         {
             this.Id = id;
         }
-        public string Id { get; set; }
+        public string Id { get; init; }
     }
     public record CoverImage
     {
@@ -23,14 +23,14 @@ namespace tb_lib.domain
             this.Name = name;
             this.Data = data;
         }
-        public BookCoverRef Reference { get; set; }
-        public string Name { get; set; }
-        public byte[] Data { get; set; }
+        public BookCoverRef Reference { get; init; }
+        public string Name { get; init; }
+        public byte[] Data { get; init; }
     }
     public record Book
     {
         public Book(string checksum, string name, string path, string extension, CoverImage coverImage,
-            bool deleted, bool read, List<string> tags, DateTime created)
+            bool deleted, bool read, ISet<Tag> tags, DateTime created)
         {
             this.Id = checksum;
             this.Name = name;
@@ -42,15 +42,27 @@ namespace tb_lib.domain
             this.Tags = tags;
             this.Created = created;
         }
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Path { get; set; }
-        public string Extension { get; set; }
-        public CoverImage CoverImage { get; set; }
-        public bool Deleted { get; set; }
-        public bool Read { get; set; }
-        public List<string> Tags { get; set; }
-        public DateTime Created { get; set; }
+        public string Id { get; init; }
+        public string Name { get; init; }
+        public string Path { get; init; }
+        public string Extension { get; init; }
+        public CoverImage CoverImage { get; init; }
+        public bool Deleted { get; init; }
+        public bool Read { get; init; }
+        public ISet<Tag> Tags { get; init; }
+        public DateTime Created { get; init; }
+    }
+
+    public record Tag
+    {
+        public const int MaxSize = 128;
+        public Tag(string value)
+        {
+            if (value.Length > MaxSize) throw new ArgumentOutOfRangeException(nameof(value));
+            this.Value = value;
+        }
+        public string Value { get; init; }
+        public override string ToString() => Value;
     }
     public interface Result { };
     public record Updated(Book item) : Result;
@@ -277,7 +289,7 @@ namespace tb_lib.infr
                     [name] = item.Name,
                     [path] = item.Path,
                     [extension] = item.Extension,
-                    [tags] = new BsonArray(item.Tags.Select(x => new BsonValue(x))),
+                    [tags] = new BsonArray(item.Tags.Select(x => new BsonValue(x.Value))),
                     [read] = item.Read,
                     [deleted] = item.Deleted,
                     [coverImage] = item.CoverImage.Reference.Id,
@@ -291,7 +303,7 @@ namespace tb_lib.infr
                         new CoverImage(new BookCoverRef(bson[coverImage]), string.Empty, Array.Empty<byte>()),
                         bson[deleted].AsBoolean,
                         bson[read].AsBoolean,
-                        bson[tags].AsArray.Select(x => x.AsString).ToList(),
+                        bson[tags].AsArray.Select(x => new Tag(x.AsString)).ToHashSet(),
                         bson[created].AsDateTime)
             );
         }
@@ -411,7 +423,7 @@ namespace tb_lib.infr
             var resizedImageDate = ImageProcessing.Resize(coverImageData);
             return new Book(checksum, name, path, extension, 
                 new CoverImage(new BookCoverRef(fileRefIdCreator.Create()), "cover.jpg", resizedImageDate),
-                false, false, Enumerable.Empty<string>().ToList(), DateTime.UtcNow);
+                false, false, Enumerable.Empty<Tag>().ToHashSet(), DateTime.UtcNow);
         }
     }
 

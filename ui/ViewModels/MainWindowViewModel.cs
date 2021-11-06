@@ -106,6 +106,7 @@ namespace tb_ui.ViewModels
             get => newTag;
             set
             {
+                if (value.Length > Tag.MaxSize) return;
                 this.RaiseAndSetIfChanged(ref newTag, value);
             }
         }
@@ -197,8 +198,8 @@ namespace tb_ui.ViewModels
             ShowAddTagWindow = false;
             var book = bCollection.GetItems().SingleOrDefault(x => x.Id == addTagChecksum);
             if (book is null) return;
-            if (book.Tags.Contains(NewTag)) return;
-            book.Tags.Add(NewTag);
+            var added = book.Tags.Add(new Tag(NewTag));
+            if (!added) return;
             var result = bCollection.UpdateItem(book);
             if (result is Updated updated)
             {
@@ -225,8 +226,8 @@ namespace tb_ui.ViewModels
             var tagValue = values.Skip(1).First().ToString()!;
             var book = bCollection.GetItems().FirstOrDefault(x => x.Id == checksum);
             if (book is null) return;
-            if (!book.Tags.Contains(tagValue)) return;
-            book.Tags.Remove(tagValue);
+            var deleted = book.Tags.Remove(new Tag(tagValue));
+            if (!deleted) return;
             var result = bCollection.UpdateItem(book);
             if (result is Updated updated)
             {
@@ -256,14 +257,14 @@ namespace tb_ui.ViewModels
 
         private List<string> GetAllTags() =>
             // TODO move to bCollection
-            bCollection.GetItems().SelectMany(x => x.Tags).Distinct().ToList();
+            bCollection.GetItems().SelectMany(x => x.Tags).Select(x => x.ToString()).Distinct().ToList();
 
         private List<UiBook> GetBooksToDisplay() =>
             bCollection.GetItems()
                 .Where(x => showDeleted || !x.Deleted)
                 .Where(x => showFinished || !x.Read)
                 .Where(x => SearchText.Length < 3
-                    || x.Tags.Any(t => t.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase))
+                    || x.Tags.Any(t => t.Value.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase))
                         || x.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase))
                 .Select(x => UiBook.Map(x)).ToList();
 

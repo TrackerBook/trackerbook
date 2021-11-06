@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using tb_lib.domain;
 
 namespace tb_ui.Models
@@ -38,7 +39,7 @@ namespace tb_ui.Models
                 Checksum = item.Id,
                 Deleted = item.Deleted,
                 Finished = item.Read,
-                Tags = new ObservableCollection<string>(item.Tags)
+                Tags = new ObservableCollection<string>(item.Tags.Select(x => x.ToString()))
             };
         } 
     }
