@@ -128,7 +128,7 @@ namespace tb_ui.ViewModels
                     if (showFinished)
                     {
                         var index = Items.IndexOf(existingItem);
-                        existingItem.Deleted = true;
+                        existingItem.Finished = true;
                         Items.RemoveAt(index);
                         Items.Insert(index, existingItem);
                     }
