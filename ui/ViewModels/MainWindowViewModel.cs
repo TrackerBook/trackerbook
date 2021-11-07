@@ -122,6 +122,21 @@ namespace tb_ui.ViewModels
             var result = bCollection.UpdateItem(item with { Read = uiBook.Finished });
             if (result is Updated updatedItem)
             {
+                var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
+                if (existingItem is not null)
+                {
+                    if (showFinished)
+                    {
+                        var index = Items.IndexOf(existingItem);
+                        existingItem.Deleted = true;
+                        Items.RemoveAt(index);
+                        Items.Insert(index, existingItem);
+                    }
+                    else
+                    {
+                        Items.Remove(existingItem);
+                    }
+                }
                 NotificationMessage = $"Updated '{ShortChecksum(updatedItem.item.Id)}'";
             }
             else if (result is Error error)
