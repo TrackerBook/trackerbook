@@ -10,6 +10,7 @@
     <Description>Application to record and save reviewed/read books.</Description>
     <RepositoryUrl>https://github.com/TrackerBook/trackerbook</RepositoryUrl>
     <Copyright>MIT</Copyright>
+    <ApplicationIcon>Assets/books.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Models\" />
