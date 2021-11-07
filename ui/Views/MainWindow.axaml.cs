@@ -1,3 +1,4 @@
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -36,7 +37,9 @@ namespace tb_ui.Views
             if (e.Data is null) return;
             if (e.Data.Contains(DataFormats.FileNames))
             {
-                await ((MainWindowViewModel)this.DataContext).UploadFiles(e.Data.GetFileNames());
+                var fileNames = e.Data.GetFileNames();
+                if (fileNames is null) return;
+                await ((MainWindowViewModel)this.DataContext).UploadFiles(fileNames.ToList());
             }
         }
 

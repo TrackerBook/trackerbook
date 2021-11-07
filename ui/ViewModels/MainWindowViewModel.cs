@@ -304,9 +304,10 @@ namespace tb_ui.ViewModels
             }
         }
 
-        public async Task UploadFiles(IEnumerable<string>? fileNames)
+        public async Task UploadFiles(ICollection<string>? fileNames)
         {
             if (fileNames is null) return;
+            var index = 1;
             foreach (var fileName in fileNames)
             {
                 // TODO move to a service
@@ -318,21 +319,22 @@ namespace tb_ui.ViewModels
                 {
                     var itemToAdd = UiBook.Map(added.item);
                     Items.Add(itemToAdd);
-                    NotificationMessage = $"Added '{ShortChecksum(added.item.Id)}'";
+                    NotificationMessage = $"Added {index}/{fileNames.Count}:'{ShortChecksum(added.item.Id)}'";
                     SelectedItem = itemToAdd;
                 }
                 else if (result is Updated updated)
                 {
                     var itemToAdd = UiBook.Map(updated.item);
                     Items.Add(itemToAdd);
-                    NotificationMessage = $"Restore '{ShortChecksum(updated.item.Id)}'";
+                    NotificationMessage = $"Restore {index}/{fileNames.Count}:'{ShortChecksum(updated.item.Id)}'";
                     SelectedItem = itemToAdd;
                 }
                 else if (result is AlreadyExists existingItem)
                 {
-                    NotificationMessage = $"Already exists '{ShortChecksum(existingItem.item.Id)}'";
+                    NotificationMessage = $"Already exists {index}/{fileNames.Count}:'{ShortChecksum(existingItem.item.Id)}'";
                     SelectedItem = Items.FirstOrDefault(x => x.Checksum == existingItem.item.Id);
                 }
+                index++;
             }
         }
 
