@@ -1,20 +1,17 @@
 ---
-name: "pre-release"
+name: "tagged-release"
 
 on:
   push:
-  pull_request:
-    branches: [ main ]
-    paths:
-    - '**.cs'
-    - '**.csproj'
+    tags:
+      - "v*"
 
 env:
   DOTNET_VERSION: '6.0.100' # The .NET SDK version to use
 
 jobs:
-  pre-release:
-    name: pre-release-${{matrix.os}}
+  tagged-release:
+    name: tagged-release-${{matrix.os}}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -36,8 +33,6 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
+          prerelease: false
           files: |
             ./release/*
