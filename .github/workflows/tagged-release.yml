@@ -26,6 +26,9 @@ jobs:
 
       - name: Install dependencies
         run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
         
       - name: Publish
         run: dotnet publish ./ui/tb-ui.csproj -c Release --framework net6.0 --self-contained true -r win10-x64 -p:PublishTrimmed=false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o ./release
