@@ -74,6 +74,7 @@ namespace tb_lib.domain
 
 namespace tb_lib.app
 {
+    using System.Threading.Tasks;
     using tb_lib.domain;
 
     public interface IBCollection
@@ -84,7 +85,7 @@ namespace tb_lib.app
     }
     public interface IChecksumCreator
     {
-        string Create(byte[] data);
+        Task<string> Create(byte[] data);
     }
 }
 
@@ -151,13 +152,16 @@ namespace tb_lib.app
     using tb_lib.domain;
     using tb_lib.infr;
     using Microsoft.Extensions.Logging;
+    using System.Threading.Tasks;
+    using System.IO;
 
     public class ChecksumCreator : IChecksumCreator
     {
-        public string Create(byte[] data)
+        public async Task<string> Create(byte[] data)
         {
             using var md5 = MD5.Create();
-            var hash = md5.ComputeHash(data);
+            using var memoryStream = new MemoryStream(data);
+            var hash = await md5.ComputeHashAsync(memoryStream);
             var checksumValue = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
             return checksumValue;
         }
@@ -415,7 +419,7 @@ namespace tb_lib.infr
         public async Task<Book> Create(string path, byte[] data)
         {
             var name = Path.GetFileNameWithoutExtension(path);
-            var checksum = this.checksumCreator.Create(data);
+            var checksum = await this.checksumCreator.Create(data);
             var extension = Path.GetExtension(path);
 
             var coverExtractor = coverExtractorFabric.Create(extension);
