@@ -57,7 +57,7 @@
                 <TextBox KeyUp="SearchTextInput" DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Search..." Name="SearchTermTextBox" />
                 <DockPanel DockPanel.Dock="Top" Height="40" HorizontalAlignment="Stretch">
                     <ToggleSwitch DockPanel.Dock="Left" OffContent="Hide deleted" OnContent="Show deleted" IsChecked="{Binding ShowDeleted}" Command="{Binding UpdateDisplayedBooks}" />
-                    <ToggleSwitch Name="Finished" DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding UpdateDisplayedBooks}"/>
+                    <ToggleSwitch Margin="5,0,0,0" Name="Finished" DockPanel.Dock="Left" OffContent="Hide finished" OnContent="Show finished" IsChecked="{Binding ShowFinished}" Command="{Binding UpdateDisplayedBooks}"/>
                     <Button HorizontalAlignment="Right" Content="Upload" Click="OnFilesUpload" DockPanel.Dock="Right" />
                 </DockPanel>
                 <ListBox Name="Books" Items="{Binding Items}" SelectedItem="{Binding SelectedItem}">
