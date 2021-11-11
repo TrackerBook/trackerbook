@@ -139,7 +139,7 @@
                                                     </Panel.Styles>
                                                     <DockPanel>
                                                         <Border DockPanel.Dock="Left">
-                                                            <TextBlock Text="{Binding}" />
+                                                            <TextBlock Text="{Binding, Converter={x:Static local:StringConvertor.ToShort}}" />
                                                         </Border>
                                                         <Button DockPanel.Dock="Left" Content="✖️" Command="{Binding DataContext.OnTagDelete, ElementName=MainWindow}">
                                                             <Button.CommandParameter>
