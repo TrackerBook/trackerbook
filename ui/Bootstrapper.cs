@@ -23,8 +23,9 @@ namespace tb_ui
                 resolver.GetRequiredService<IFileRefIdCreator>()
             ));
             services.RegisterLazySingleton<IFileRefIdCreator>(() => new FileRefIdCreator());
-            services.RegisterLazySingleton<ICoverExtractor>(() => new Fb2MetaExtractor());
-            services.RegisterLazySingleton<ICoverExtractor>(() => new PdfMetaExtractor());
+            services.RegisterLazySingleton<ICoverExtractor>(() => new Fb2CoverExtractor());
+            services.RegisterLazySingleton<ICoverExtractor>(() => new PdfCoverExtractor());
+            services.RegisterLazySingleton<ICoverExtractor>(() => new EpubCoverExtractor());
             services.RegisterLazySingleton<ICoverExtractor>(() => new DefaultCoverExtractor());
             services.RegisterLazySingleton<IBCollection>(() => new BCollection(
                 new LoggerFactory(),

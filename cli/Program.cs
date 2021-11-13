@@ -25,9 +25,10 @@ namespace tb_cli
                 .AddSingleton<ICoverExtractorFabric, CoverExtractorFabric>()
                 .AddSingleton<IBookCreator, BookCreator>()
                 .AddSingleton<IFileRefIdCreator, FileRefIdCreator>()
-                .AddSingleton<ICoverExtractor, Fb2MetaExtractor>()
+                .AddSingleton<ICoverExtractor, Fb2CoverExtractor>()
+                .AddSingleton<ICoverExtractor, EpubCoverExtractor>()
                 .AddSingleton<ICoverExtractor, DefaultCoverExtractor>()
-                .AddSingleton<ICoverExtractor, PdfMetaExtractor>()
+                .AddSingleton<ICoverExtractor, PdfCoverExtractor>()
                 .BuildServiceProvider();
             Console.OutputEncoding = Encoding.UTF8;
 

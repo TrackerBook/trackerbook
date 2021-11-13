@@ -124,7 +124,8 @@ namespace tb_lib.infr
     {
         @default,
         fb2,
-        pdf
+        pdf,
+        epub
     }
 
     public interface ICoverExtractor
@@ -271,6 +272,7 @@ namespace tb_lib.infr
     using SixLabors.ImageSharp;
     using SixLabors.ImageSharp.Formats.Jpeg;
     using SixLabors.ImageSharp.Processing;
+    using VersOne.Epub;
 
     public class Storage : IStorage
     {
@@ -445,6 +447,7 @@ namespace tb_lib.infr
             {
                 ".fb2" => SupportedFileFormat.fb2,
                 ".pdf" => SupportedFileFormat.pdf,
+                ".epub" => SupportedFileFormat.epub,
                 _ => SupportedFileFormat.@default
             });
     }
@@ -456,7 +459,19 @@ namespace tb_lib.infr
         public Task<byte[]> Extract(byte[] data) => Task.FromResult(Array.Empty<byte>());
     }
 
-    public class Fb2MetaExtractor : ICoverExtractor
+    public class EpubCoverExtractor : ICoverExtractor
+    {
+        public SupportedFileFormat FileFormat => SupportedFileFormat.epub;
+
+        public async Task<byte[]> Extract(byte[] data)
+        {
+            using var bookStream = new MemoryStream(data);
+            var epubBook = await EpubReader.OpenBookAsync(bookStream);
+            return await epubBook.ReadCoverAsync();
+        }
+    }
+
+    public class Fb2CoverExtractor : ICoverExtractor
     {
         public SupportedFileFormat FileFormat => SupportedFileFormat.fb2;
 
@@ -488,7 +503,7 @@ namespace tb_lib.infr
         }
     }
 
-    public class PdfMetaExtractor : ICoverExtractor
+    public class PdfCoverExtractor : ICoverExtractor
     {
         public SupportedFileFormat FileFormat => SupportedFileFormat.pdf;
 

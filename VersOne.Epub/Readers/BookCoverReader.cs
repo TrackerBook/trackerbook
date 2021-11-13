@@ -18,7 +18,8 @@ namespace VersOne.Epub.Internal
             EpubMetadataMeta coverMetaItem = metaItems.FirstOrDefault(metaItem => metaItem.Name.CompareOrdinalIgnoreCase("cover"));
             if (coverMetaItem == null)
             {
-                return null;
+                 // Fix to assume the first image is a cover
+                return imageContentRefs.Count > 0 ? imageContentRefs.First().Value : null;
             }
             if (String.IsNullOrEmpty(coverMetaItem.Content))
             {
