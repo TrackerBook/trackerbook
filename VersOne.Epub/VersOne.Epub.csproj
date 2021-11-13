@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>net6.0</TargetFrameworks>
+        <Authors>vers</Authors>
+        <Company />
+        <Product />
+        <Description />
+        <Copyright>vers, 2015-2019</Copyright>
+        <Version>3.0.3</Version>
+        <RepositoryUri>https://github.com/vers-one/EpubReader</RepositoryUri>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
+        <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
+        <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
+    </ItemGroup>
+</Project>
