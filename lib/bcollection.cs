@@ -425,7 +425,11 @@ namespace tb_lib.infr
             var extension = Path.GetExtension(path);
 
             var coverExtractor = coverExtractorFabric.Create(extension);
-            var coverImageData = await coverExtractor.Extract(data); 
+            var coverImageData = Array.Empty<byte>();
+            try {
+                coverImageData = await coverExtractor.Extract(data) ?? Array.Empty<byte>();
+            } catch {
+            }
             var resizedImageDate = ImageProcessing.Resize(coverImageData);
             return new Book(checksum, name, path, extension, 
                 new CoverImage(new BookCoverRef(fileRefIdCreator.Create()), "cover.jpg", resizedImageDate),

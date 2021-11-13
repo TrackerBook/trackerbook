@@ -8,7 +8,7 @@ namespace VersOne.Epub.Internal
 {
     internal static class BookCoverReader
     {
-        public static EpubByteContentFileRef ReadBookCover(EpubSchema epubSchema, Dictionary<string, EpubByteContentFileRef> imageContentRefs)
+        public static EpubByteContentFileRef ReadBookCover(Dictionary<string, EpubContentFileRef> allFiles, EpubSchema epubSchema, Dictionary<string, EpubByteContentFileRef> imageContentRefs)
         {
             List<EpubMetadataMeta> metaItems = epubSchema.Package.Metadata.MetaItems;
             if (metaItems == null || !metaItems.Any())
@@ -18,8 +18,19 @@ namespace VersOne.Epub.Internal
             EpubMetadataMeta coverMetaItem = metaItems.FirstOrDefault(metaItem => metaItem.Name.CompareOrdinalIgnoreCase("cover"));
             if (coverMetaItem == null)
             {
-                 // Fix to assume the first image is a cover
-                return imageContentRefs.Count > 0 ? imageContentRefs.First().Value : null;
+                // var coverGuide = epubSchema.Package.Guide.FirstOrDefault(x => x.Type == "cover");
+                // if (coverGuide is not null) {
+                //     var coverKey = coverGuide.Href;
+                //     if (allFiles.ContainsKey(coverKey)) {
+                //         var content = allFiles[coverKey].ReadContentAsText();
+                //         const string pattern = @"<img.+src=";
+                //     }
+                // }
+                //  // Fix to assume the first image is a cover
+                if (imageContentRefs.Any(x => x.Key.Contains("cover", StringComparison.InvariantCultureIgnoreCase))) {
+                    return imageContentRefs.First(x => x.Key.Contains("cover", StringComparison.InvariantCultureIgnoreCase)).Value;
+                }
+                return null;
             }
             if (String.IsNullOrEmpty(coverMetaItem.Content))
             {
