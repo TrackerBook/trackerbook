@@ -115,7 +115,6 @@ namespace tb_ui.ViewModels
 
         public void FinishBook(string checksum)
         {
-            ///
             var uiBook = Items.SingleOrDefault(x => x.Checksum == checksum);
             if (uiBook == null) return;
             var item = bCollection.GetItems().SingleOrDefault(x => x.Id == checksum);
