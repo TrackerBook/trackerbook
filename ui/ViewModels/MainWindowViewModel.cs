@@ -119,7 +119,8 @@ namespace tb_ui.ViewModels
             if (uiBook == null) return;
             var item = bCollection.GetItems().SingleOrDefault(x => x.Id == checksum);
             if (item is null) return;
-            var result = bCollection.UpdateItem(item with { Read = uiBook.Finished });
+            var newValue = uiBook.Finished;
+            var result = bCollection.UpdateItem(item with { Read = newValue });
             if (result is Updated updatedItem)
             {
                 var existingItem = Items.FirstOrDefault(x => x.Checksum == checksum);
@@ -128,7 +129,7 @@ namespace tb_ui.ViewModels
                     if (showFinished)
                     {
                         var index = Items.IndexOf(existingItem);
-                        existingItem.Finished = true;
+                        existingItem.Finished = newValue;
                         Items.RemoveAt(index);
                         Items.Insert(index, existingItem);
                     }
